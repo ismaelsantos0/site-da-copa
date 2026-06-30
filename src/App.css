@@ -399,3 +399,34 @@
   box-shadow: 0 4px 15px rgba(0, 255, 170, 0.3);
 }
 
+
+.team {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inline-odd-badge {
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  min-width: 28px;
+  text-align: center;
+}
+
+.inline-odd-badge.fav {
+  background: rgba(0, 255, 170, 0.15);
+  color: #00ffaa;
+  border-color: #00ffaa;
+  box-shadow: 0 0 5px rgba(0, 255, 170, 0.3);
+}
+
+.action-btn.btn-stats {
+  font-size: 0.75rem;
+}
+

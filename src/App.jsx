@@ -81,11 +81,53 @@ const connectionsDef = [
 function App() {
   const [data, setData] = useState(initialMatches);
   const [lines, setLines] = useState([]);
-  const [selectedMatch, setSelectedMatch] = useState(null);
-  const [oddsData, setOddsData] = useState(null);
-  const [oddsLoading, setOddsLoading] = useState(false);
-  const [oddsError, setOddsError] = useState(null);
+  const [allOdds, setAllOdds] = useState([]);
+  const [oddsFetched, setOddsFetched] = useState(false);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_API_KEY;
+    if (!apiKey) {
+      console.warn('VITE_API_KEY ausente. Usando odds vazias (simulado localmente).');
+      setOddsFetched(true);
+      return;
+    }
+
+    fetch(`https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/?apiKey=${apiKey}&regions=us&markets=h2h`)
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.message) {
+           throw new Error(resData.message);
+        }
+        setAllOdds(resData);
+      })
+      .catch(err => {
+        console.error('Erro ao buscar odds:', err);
+      })
+      .finally(() => {
+        setOddsFetched(true);
+      });
+  }, []);
+
+  const getMatchOdds = (teamName1, teamName2) => {
+    let matchOdds = allOdds.find(m => 
+      (m.home_team.toLowerCase().includes(teamName1.toLowerCase()) || m.away_team.toLowerCase().includes(teamName1.toLowerCase())) ||
+      (m.home_team.toLowerCase().includes(teamName2.toLowerCase()) || m.away_team.toLowerCase().includes(teamName2.toLowerCase()))
+    );
+
+    if (matchOdds && matchOdds.bookmakers && matchOdds.bookmakers.length > 0) {
+      const h2h = matchOdds.bookmakers[0].markets[0].outcomes;
+      const t1Odd = h2h.find(o => o.name === matchOdds.home_team || o.name.includes(teamName1));
+      const t2Odd = h2h.find(o => o.name === matchOdds.away_team || o.name.includes(teamName2));
+      return { t1Odd: t1Odd?.price || null, t2Odd: t2Odd?.price || null };
+    }
+
+    const seed = teamName1.length + teamName2.length;
+    return {
+       t1Odd: +(1.2 + (seed % 3) * 0.4).toFixed(2),
+       t2Odd: +(1.5 + (seed % 4) * 0.6).toFixed(2)
+    };
+  };
 
   const updateMatch = (side, round, id, team, field, value) => {
     setData(prev => {
@@ -120,61 +162,27 @@ function App() {
     });
   };
 
-  const openOddsModal = (match, side, round) => {
-    setSelectedMatch({ ...match, side, round });
-    setOddsData(null);
-    setOddsError(null);
-    setOddsLoading(true);
+  const applyMagicPrediction = (matchObjInfo, side, round) => {
+    const { t1Odd, t2Odd } = getMatchOdds(matchObjInfo.t1.n, matchObjInfo.t2.n);
+    if (!t1Odd || !t2Odd || t1Odd === t2Odd) return;
 
-    const apiKey = import.meta.env.VITE_API_KEY;
+    const isT1Fav = t1Odd < t2Odd;
 
-    const setMockOdds = () => {
-      setOddsData({
-        home: { name: match.t1.n, price: +(Math.random() * 2 + 1.2).toFixed(2) },
-        draw: { name: 'Empate', price: +(Math.random() * 2 + 2.5).toFixed(2) },
-        away: { name: match.t2.n, price: +(Math.random() * 3 + 1.5).toFixed(2) }
-      });
-      setOddsLoading(false);
-    };
-
-    if (!apiKey) {
-      console.warn('VITE_API_KEY não configurada. Usando Odds simuladas para demonstração local.');
-      setTimeout(setMockOdds, 800); // Simulando delay de rede
-      return;
-    }
-
-    fetch(`https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/?apiKey=${apiKey}&regions=us&markets=h2h`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.message) {
-           throw new Error(data.message);
-        }
-        
-        const matchOdds = data.find(m => 
-          m.home_team.toLowerCase().includes(match.t1.n.toLowerCase()) || 
-          m.away_team.toLowerCase().includes(match.t1.n.toLowerCase())
-        );
-
-        if (matchOdds && matchOdds.bookmakers.length > 0) {
-          const h2h = matchOdds.bookmakers[0].markets[0].outcomes;
-          setOddsData({
-            home: h2h.find(o => o.name === matchOdds.home_team),
-            away: h2h.find(o => o.name === matchOdds.away_team),
-            draw: h2h.find(o => o.name === 'Draw')
-          });
-          setOddsLoading(false);
-        } else {
-          setMockOdds();
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        setOddsError('Erro ao buscar as odds na API (' + err.message + ').');
-        setOddsLoading(false);
-      });
+    setData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      let targetObj;
+      if (side === 'final') targetObj = newData.final;
+      else targetObj = newData[side][round].find(m => m.id === matchObjInfo.id);
+      
+      if (targetObj) {
+         targetObj.t1.s = isT1Fav ? '2' : '0';
+         targetObj.t1.w = isT1Fav;
+         targetObj.t2.s = isT1Fav ? '0' : '2';
+         targetObj.t2.w = !isT1Fav;
+      }
+      return newData;
+    });
   };
-
-  const closeModal = () => setSelectedMatch(null);
 
   useEffect(() => {
     const drawLines = () => {
@@ -214,25 +222,33 @@ function App() {
     return () => window.removeEventListener('resize', drawLines);
   }, [data]);
 
-  const renderTeam = (t, side, round, matchId, teamKey) => (
-    <div className={`team ${t.w ? 'winner' : ''}`}>
-      <input 
-        className="editable-input team-flag-input" 
-        value={t.f} 
-        onChange={(e) => updateMatch(side, round, matchId, teamKey, 'f', e.target.value)}
-      />
-      <input 
-        className="editable-input" 
-        value={t.n} 
-        onChange={(e) => updateMatch(side, round, matchId, teamKey, 'n', e.target.value)}
-      />
-      <input 
-        className="editable-input team-score-input" 
-        value={t.s} 
-        onChange={(e) => updateMatch(side, round, matchId, teamKey, 's', e.target.value)}
-      />
-    </div>
-  );
+  const renderTeam = (t, side, round, matchObj, teamKey) => {
+    const { t1Odd, t2Odd } = getMatchOdds(matchObj.t1.n, matchObj.t2.n);
+    const myOdd = teamKey === 't1' ? t1Odd : t2Odd;
+    const opponentOdd = teamKey === 't1' ? t2Odd : t1Odd;
+    const isFav = myOdd && opponentOdd && myOdd < opponentOdd;
+
+    return (
+      <div className={`team ${t.w ? 'winner' : ''}`}>
+        {myOdd && <span className={`inline-odd-badge ${isFav ? 'fav' : ''}`}>{myOdd.toFixed(2)}</span>}
+        <input 
+          className="editable-input team-flag-input" 
+          value={t.f} 
+          onChange={(e) => updateMatch(side, round, matchObj.id, teamKey, 'f', e.target.value)}
+        />
+        <input 
+          className="editable-input" 
+          value={t.n} 
+          onChange={(e) => updateMatch(side, round, matchObj.id, teamKey, 'n', e.target.value)}
+        />
+        <input 
+          className="editable-input team-score-input" 
+          value={t.s} 
+          onChange={(e) => updateMatch(side, round, matchObj.id, teamKey, 's', e.target.value)}
+        />
+      </div>
+    );
+  };
 
   const renderRound = (matches, side, roundName, isSingle = false) => {
     const connectors = [];
@@ -241,100 +257,22 @@ function App() {
         <div key={i} className="match-connector">
           <div className={`match ${matches[i].status}`} id={matches[i].id}>
             <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i].id); }} title="Alternar Status">↺</button>
-            <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i], side, roundName); }} title="Ver Odds">📊</button>
-            {renderTeam(matches[i].t1, side, roundName, matches[i].id, 't1')}
-            {renderTeam(matches[i].t2, side, roundName, matches[i].id, 't2')}
+            <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyMagicPrediction(matches[i], side, roundName); }} title="Mágica: Prever Vencedor">🪄</button>
+            {renderTeam(matches[i].t1, side, roundName, matches[i], 't1')}
+            {renderTeam(matches[i].t2, side, roundName, matches[i], 't2')}
           </div>
           {matches[i+1] && (
             <div className={`match ${matches[i+1].status}`} id={matches[i+1].id}>
               <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i+1].id); }} title="Alternar Status">↺</button>
-              <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i+1], side, roundName); }} title="Ver Odds">📊</button>
-              {renderTeam(matches[i+1].t1, side, roundName, matches[i+1].id, 't1')}
-              {renderTeam(matches[i+1].t2, side, roundName, matches[i+1].id, 't2')}
+              <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyMagicPrediction(matches[i+1], side, roundName); }} title="Mágica: Prever Vencedor">🪄</button>
+              {renderTeam(matches[i+1].t1, side, roundName, matches[i+1], 't1')}
+              {renderTeam(matches[i+1].t2, side, roundName, matches[i+1], 't2')}
             </div>
           )}
         </div>
       );
     }
     return connectors;
-  };
-
-  const getFavorite = () => {
-    if (!oddsData || !oddsData.home || !oddsData.away) return null;
-    if (oddsData.home.price < oddsData.away.price) return 'home';
-    if (oddsData.away.price < oddsData.home.price) return 'away';
-    return 'draw';
-  };
-
-  const applyPrediction = () => {
-    const fav = getFavorite();
-    if (!fav || fav === 'draw') return;
-
-    const isHomeFav = fav === 'home';
-    const { side, round, id } = selectedMatch;
-    
-    setData(prev => {
-      const newData = JSON.parse(JSON.stringify(prev));
-      let matchObj;
-      if (side === 'final') matchObj = newData.final;
-      else matchObj = newData[side][round].find(m => m.id === id);
-      
-      if (matchObj) {
-         matchObj.t1.s = isHomeFav ? '2' : '0';
-         matchObj.t1.w = isHomeFav;
-         matchObj.t2.s = isHomeFav ? '0' : '2';
-         matchObj.t2.w = !isHomeFav;
-      }
-      return newData;
-    });
-    closeModal();
-  };
-
-  const renderModal = () => {
-    if (!selectedMatch) return null;
-    const fav = getFavorite();
-
-    return (
-      <div className="modal-overlay" onClick={closeModal}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-          <button className="modal-close" onClick={closeModal}>&times;</button>
-          <div className="modal-header">
-            <h2>{selectedMatch.t1.f} {selectedMatch.t1.n} x {selectedMatch.t2.n} {selectedMatch.t2.f}</h2>
-            <p>The Odds API - Moneyline (H2H)</p>
-          </div>
-          
-          {oddsLoading && <div className="loading-skeleton">Buscando odds ao vivo... 📡</div>}
-          {oddsError && <div className="error-message">{oddsError}</div>}
-          
-          {oddsData && (
-            <>
-              <div className="odds-container">
-                <div className={`odd-box ${fav === 'home' ? 'fav' : ''}`}>
-                  <h4>{oddsData.home?.name || 'Casa'}</h4>
-                  <div className="odd-value">{oddsData.home?.price?.toFixed(2) || '-'}</div>
-                </div>
-                <div className="odd-box">
-                  <h4>Empate</h4>
-                  <div className="odd-value">{oddsData.draw?.price?.toFixed(2) || '-'}</div>
-                </div>
-                <div className={`odd-box ${fav === 'away' ? 'fav' : ''}`}>
-                  <h4>{oddsData.away?.name || 'Fora'}</h4>
-                  <div className="odd-value">{oddsData.away?.price?.toFixed(2) || '-'}</div>
-                </div>
-              </div>
-              
-              {fav && fav !== 'draw' && (
-                <div className="prediction-action">
-                  <button className="btn-predict" onClick={applyPrediction}>
-                    🏆 Definir {fav === 'home' ? selectedMatch.t1.n : selectedMatch.t2.n} como Vencedor (Placar 2x0)
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -384,9 +322,9 @@ function App() {
               <div className="final-match-container">
                 <div className="match final-match" id={data.final.id}>
                    <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus('final', null, data.final.id); }}>↺</button>
-                   <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(data.final, 'final', null); }}>📊</button>
-                  {renderTeam(data.final.t1, 'final', null, data.final.id, 't1')}
-                  {renderTeam(data.final.t2, 'final', null, data.final.id, 't2')}
+                   <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyMagicPrediction(data.final, 'final', null); }} title="Mágica: Prever Vencedor">🪄</button>
+                  {renderTeam(data.final.t1, 'final', null, data.final, 't1')}
+                  {renderTeam(data.final.t2, 'final', null, data.final, 't2')}
                 </div>
               </div>
             </div>
@@ -400,8 +338,6 @@ function App() {
           </div>
         </TransformComponent>
       </TransformWrapper>
-      
-      {renderModal()}
     </>
   );
 }
