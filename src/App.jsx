@@ -167,6 +167,28 @@ function App() {
     if (!t1Odd || !t2Odd || t1Odd === t2Odd) return;
 
     const isT1Fav = t1Odd < t2Odd;
+    const favOdd = isT1Fav ? t1Odd : t2Odd;
+    const underdogOdd = isT1Fav ? t2Odd : t1Odd;
+    const diff = underdogOdd - favOdd;
+    
+    let favGoals, underGoals;
+    
+    // Lógica inteligente de placar baseada na diferença (distância) entre as odds
+    if (diff > 5.0) {
+      favGoals = '4'; underGoals = '0'; // Goleada absoluta (Super Favorito)
+    } else if (diff > 2.5) {
+      favGoals = '3'; underGoals = '0'; // Vitória muito folgada
+    } else if (diff > 1.2) {
+      favGoals = '2'; underGoals = '0'; // Vitória confortável
+    } else if (diff > 0.5) {
+      favGoals = '2'; underGoals = '1'; // Jogo disputado
+    } else {
+      // Jogo extremamente acirrado (odds quase iguais), vai para os pênaltis!
+      const favPens = 4 + (matchObjInfo.t1.n.length % 2); // 4 ou 5
+      const underPens = favPens - 1;
+      favGoals = `1(${favPens})`; 
+      underGoals = `1(${underPens})`;
+    }
 
     setData(prev => {
       const newData = JSON.parse(JSON.stringify(prev));
@@ -175,9 +197,9 @@ function App() {
       else targetObj = newData[side][round].find(m => m.id === matchObjInfo.id);
       
       if (targetObj) {
-         targetObj.t1.s = isT1Fav ? '2' : '0';
+         targetObj.t1.s = isT1Fav ? favGoals : underGoals;
          targetObj.t1.w = isT1Fav;
-         targetObj.t2.s = isT1Fav ? '0' : '2';
+         targetObj.t2.s = isT1Fav ? underGoals : favGoals;
          targetObj.t2.w = !isT1Fav;
       }
       return newData;
