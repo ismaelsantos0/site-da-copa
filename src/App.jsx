@@ -89,7 +89,7 @@ function App() {
 
   const updateMatch = (side, round, id, team, field, value) => {
     setData(prev => {
-      const newData = { ...prev };
+      const newData = JSON.parse(JSON.stringify(prev));
       if (side === 'final') {
         if(team === 'champ') newData.final.champ[field] = value;
         else newData.final[team][field] = value;
@@ -106,7 +106,7 @@ function App() {
 
   const toggleStatus = (side, round, id) => {
     setData(prev => {
-      const newData = { ...prev };
+      const newData = JSON.parse(JSON.stringify(prev));
       if (side === 'final') {
         newData.final.status = newData.final.status === 'completed' ? 'prediction' : 'completed';
       } else {
@@ -119,6 +119,62 @@ function App() {
       return newData;
     });
   };
+
+  const openOddsModal = (match) => {
+    setSelectedMatch(match);
+    setOddsData(null);
+    setOddsError(null);
+    setOddsLoading(true);
+
+    const apiKey = import.meta.env.VITE_API_KEY;
+
+    const setMockOdds = () => {
+      setOddsData({
+        home: { name: match.t1.n, price: +(Math.random() * 2 + 1.2).toFixed(2) },
+        draw: { name: 'Empate', price: +(Math.random() * 2 + 2.5).toFixed(2) },
+        away: { name: match.t2.n, price: +(Math.random() * 3 + 1.5).toFixed(2) }
+      });
+      setOddsLoading(false);
+    };
+
+    if (!apiKey) {
+      console.warn('VITE_API_KEY não configurada. Usando Odds simuladas para demonstração local.');
+      setTimeout(setMockOdds, 800); // Simulando delay de rede
+      return;
+    }
+
+    fetch(`https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/?apiKey=${apiKey}&regions=us&markets=h2h`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.message) {
+           throw new Error(data.message);
+        }
+        
+        const matchOdds = data.find(m => 
+          m.home_team.toLowerCase().includes(match.t1.n.toLowerCase()) || 
+          m.away_team.toLowerCase().includes(match.t1.n.toLowerCase())
+        );
+
+        if (matchOdds && matchOdds.bookmakers.length > 0) {
+          const h2h = matchOdds.bookmakers[0].markets[0].outcomes;
+          setOddsData({
+            home: h2h.find(o => o.name === matchOdds.home_team),
+            away: h2h.find(o => o.name === matchOdds.away_team),
+            draw: h2h.find(o => o.name === 'Draw')
+          });
+          setOddsLoading(false);
+        } else {
+          setMockOdds();
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setOddsError('Erro ao buscar as odds na API (' + err.message + ').');
+        setOddsLoading(false);
+      });
+  };
+
+  const closeModal = () => setSelectedMatch(null);
 
   useEffect(() => {
     const drawLines = () => {
@@ -184,15 +240,15 @@ function App() {
       connectors.push(
         <div key={i} className="match-connector">
           <div className={`match ${matches[i].status}`} id={matches[i].id}>
-            <button className="action-btn btn-status" onClick={() => toggleStatus(side, roundName, matches[i].id)} title="Alternar Status">↺</button>
-            <button className="action-btn btn-stats" onClick={() => openOddsModal(matches[i])} title="Ver Odds">📊</button>
+            <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i].id); }} title="Alternar Status">↺</button>
+            <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i]); }} title="Ver Odds">📊</button>
             {renderTeam(matches[i].t1, side, roundName, matches[i].id, 't1')}
             {renderTeam(matches[i].t2, side, roundName, matches[i].id, 't2')}
           </div>
           {matches[i+1] && (
             <div className={`match ${matches[i+1].status}`} id={matches[i+1].id}>
-              <button className="action-btn btn-status" onClick={() => toggleStatus(side, roundName, matches[i+1].id)} title="Alternar Status">↺</button>
-              <button className="action-btn btn-stats" onClick={() => openOddsModal(matches[i+1])} title="Ver Odds">📊</button>
+              <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i+1].id); }} title="Alternar Status">↺</button>
+              <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i+1]); }} title="Ver Odds">📊</button>
               {renderTeam(matches[i+1].t1, side, roundName, matches[i+1].id, 't1')}
               {renderTeam(matches[i+1].t2, side, roundName, matches[i+1].id, 't2')}
             </div>
@@ -284,8 +340,8 @@ function App() {
               </div>
               <div className="final-match-container">
                 <div className="match final-match" id={data.final.id}>
-                   <button className="action-btn btn-status" onClick={() => toggleStatus('final', null, data.final.id)}>↺</button>
-                   <button className="action-btn btn-stats" onClick={() => openOddsModal(data.final)}>📊</button>
+                   <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus('final', null, data.final.id); }}>↺</button>
+                   <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(data.final); }}>📊</button>
                   {renderTeam(data.final.t1, 'final', null, data.final.id, 't1')}
                   {renderTeam(data.final.t2, 'final', null, data.final.id, 't2')}
                 </div>
