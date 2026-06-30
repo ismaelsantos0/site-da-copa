@@ -317,14 +317,14 @@ function App() {
   };
 
   const openMatchModal = async (match, side, round) => {
-    const { t1Odd, t2Odd } = getMatchOdds(match.t1?.n, match.t2?.n);
+    if (!match.t1.n || !match.t2.n) return;
+    
+    const { t1Odd, t2Odd } = getMatchOdds(match.t1.n, match.t2.n);
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     
     setSelectedMatchModal({ match, side, round, odds: { t1Odd, t2Odd } });
     setMatchNotes('');
     setH2hData(null);
-
-    if (!match.t1?.n || !match.t2?.n) return;
 
     try {
       const h2hRes = await fetch(`${apiUrl}/api/h2h/${encodeURIComponent(match.t1.n)}/${encodeURIComponent(match.t2.n)}`);
@@ -574,13 +574,7 @@ function App() {
     const info = teamInfo[t.n] || { fifa: t.n ? t.n.substring(0, 3).toUpperCase() : '', iso: '' };
 
     return (
-      <div 
-        className={`team ${t.w ? 'winner' : ''} ${!t.n ? 'empty' : ''}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (t.n) updateMatch(side, round, matchObj.id, teamKey, 'winner', true);
-        }}
-      >
+      <div className={`team ${t.w ? 'winner' : ''}`}>
         {info.iso ? (
           <div 
             className="flag-button"
