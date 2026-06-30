@@ -261,8 +261,98 @@ app.get('/api/my-bracket', async (req, res) => {
 });
 
 // ==========================================
-// ROTAS DE ADMIN
+// ROTAS DO TRACKER OFICIAL E PALPITES
 // ==========================================
+
+// Lista todos os jogos reais confirmados e acabados junto com o palpite do usuário (se houver)
+app.get('/api/real-matches', async (req, res) => {
+  try {
+    const query = `
+      SELECT r.*, p.pred_t1, p.pred_t2, p.status as pred_status
+      FROM real_matches r
+      LEFT JOIN my_predictions p ON r.id = p.match_id
+      ORDER BY r.match_date ASC
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao listar real-matches:', err);
+    res.status(500).json({ error: 'Erro ao listar jogos oficiais.' });
+  }
+});
+
+// Salvar um palpite
+app.post('/api/predictions', async (req, res) => {
+  try {
+    const { match_id, pred_t1, pred_t2 } = req.body;
+    
+    const checkMatch = await pool.query('SELECT status FROM real_matches WHERE id = $1', [match_id]);
+    if (checkMatch.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado.' });
+    if (checkMatch.rows[0].status === 'FINISHED') return res.status(400).json({ error: 'Jogo já encerrado.' });
+
+    // Upsert Prediction
+    const updateRes = await pool.query(
+      'UPDATE my_predictions SET pred_t1 = $1, pred_t2 = $2, last_updated = CURRENT_TIMESTAMP WHERE match_id = $3 RETURNING *',
+      [pred_t1, pred_t2, match_id]
+    );
+
+    if (updateRes.rows.length === 0) {
+      await pool.query(
+        'INSERT INTO my_predictions (match_id, pred_t1, pred_t2) VALUES ($1, $2, $3)',
+        [match_id, pred_t1, pred_t2]
+      );
+    }
+    
+    res.json({ success: true, message: 'Palpite registrado!' });
+  } catch (error) {
+    console.error('Erro ao salvar palpite:', error);
+    res.status(500).json({ error: 'Falha ao salvar palpite.' });
+  }
+});
+
+// ==========================================
+// ROTAS DE ADMIN E TESTE
+// ==========================================
+
+// Simula o encerramento de uma partida real para testar o sistema de acertos do palpite
+app.post('/api/admin/simulate-result', async (req, res) => {
+  try {
+    const { match_id, real_score_t1, real_score_t2 } = req.body;
+    
+    // 1. Atualiza o jogo real para FINISHED
+    await pool.query(
+      "UPDATE real_matches SET status = 'FINISHED', score_t1 = $1, score_t2 = $2 WHERE id = $3",
+      [real_score_t1, real_score_t2, match_id]
+    );
+
+    // 2. Avalia o palpite do usuário
+    const pred = await pool.query('SELECT * FROM my_predictions WHERE match_id = $1', [match_id]);
+    
+    if (pred.rows.length > 0) {
+      const p = pred.rows[0];
+      let newStatus = 'WRONG';
+      
+      // Checa Acerto Exato do Placar
+      if (p.pred_t1 === real_score_t1 && p.pred_t2 === real_score_t2) {
+        newStatus = 'CORRECT';
+      } 
+      // Checa Acerto de Tendência (Vencedor ou Empate)
+      else {
+        const realDiff = real_score_t1 - real_score_t2;
+        const predDiff = p.pred_t1 - p.pred_t2;
+        if ((realDiff > 0 && predDiff > 0) || (realDiff < 0 && predDiff < 0) || (realDiff === 0 && predDiff === 0)) {
+          newStatus = 'CORRECT';
+        }
+      }
+
+      await pool.query("UPDATE my_predictions SET status = $1 WHERE match_id = $2", [newStatus, match_id]);
+    }
+    
+    res.json({ success: true, message: 'Partida encerrada e palpites verificados!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao simular resultado.' });
+  }
+});
 
 // Nova rota (Admin): Sincroniza estatísticas reais da Sportmonks
 app.get('/api/admin/sync-stats', async (req, res) => {

@@ -38,11 +38,36 @@ const initDB = async () => {
       )
     `);
 
-    // Tabela de Salvamento em Nuvem Pessoal do Chaveamento
+    // Tabela de Salvamento em Nuvem Pessoal do Chaveamento de Simulação
     await pool.query(`
       CREATE TABLE IF NOT EXISTS my_bracket (
         id INTEGER PRIMARY KEY,
         bracket_data TEXT,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Tabela Oficial de Jogos da Copa
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS real_matches (
+        id VARCHAR(255) PRIMARY KEY,
+        stage VARCHAR(255),
+        t1 VARCHAR(255),
+        t2 VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'CONFIRMED', -- CONFIRMED, FINISHED
+        score_t1 INTEGER DEFAULT NULL,
+        score_t2 INTEGER DEFAULT NULL,
+        match_date TIMESTAMP
+      )
+    `);
+
+    // Tabela Oficial de Palpites Pessoais
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS my_predictions (
+        match_id VARCHAR(255) PRIMARY KEY,
+        pred_t1 INTEGER,
+        pred_t2 INTEGER,
+        status VARCHAR(50) DEFAULT 'PENDING', -- PENDING, CORRECT, WRONG
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

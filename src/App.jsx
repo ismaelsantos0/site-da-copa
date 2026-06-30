@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import PredictionsModal from './PredictionsModal';
 import { teamStats, calculateTeamStrength, getTacticalMultiplier } from './teamStats';
 import './App.css';
 
@@ -125,6 +126,18 @@ function App() {
   const [matchNotes, setMatchNotes] = useState('');
   const [h2hData, setH2hData] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [showPredictionsModal, setShowPredictionsModal] = useState(false);
+  const [daysToFinal, setDaysToFinal] = useState(0);
+
+  // Calcula dias para a final
+  useEffect(() => {
+    const finalDate = new Date('2026-07-19T15:00:00');
+    const today = new Date();
+    const diffTime = Math.abs(finalDate - today);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    setDaysToFinal(diffDays);
+  }, []);
+
   const [aiCache, setAiCache] = useState({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -798,11 +811,19 @@ function App() {
       
       {/* Botão Flutuante de Salvar na Nuvem */}
       <button id="cloud-save-btn" className="cloud-save-btn" onClick={saveToCloud}>
-        ☁️ Salvar Progresso
+        ☁️ Salvar Simulação
       </button>
+
+      {showPredictionsModal && <PredictionsModal onClose={() => setShowPredictionsModal(false)} />}
 
       <div className="background-overlay"></div>
       
+      {/* Barra de Progresso para a Final */}
+      <div className="countdown-bar">
+        <div className="countdown-progress" style={{ width: `${Math.min(100, 100 - (daysToFinal / 10))} %` }}></div>
+        <span className="countdown-text">🏆 Faltam {daysToFinal} dias para a Grande Final da Copa do Mundo 2026!</span>
+      </div>
+
       <div className="app-header">
         <h1>🏆 Copa do Mundo 2026</h1>
         <div className="header-controls">
@@ -811,6 +832,9 @@ function App() {
             <div className="legend-item"><div className="legend-color confirmed"></div> Confirmado</div>
             <div className="legend-item"><div className="legend-color prediction"></div> Especulação</div>
           </div>
+          <button className="betting-btn" onClick={() => setShowPredictionsModal(true)}>
+            🎯 Meus Palpites (Jogos Oficiais)
+          </button>
           <button 
             className="btn-predict-all" 
             onClick={simulateAll}

@@ -776,3 +776,142 @@
   color: #fff;
 }
 
+
+.countdown-bar {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid #eab308;
+  z-index: 50;
+}
+.countdown-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.5));
+  z-index: 1;
+  transition: width 1s ease-in-out;
+}
+.countdown-text {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.betting-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+  transition: all 0.3s;
+  margin-right: 15px;
+}
+.betting-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+}
+
+/* Predictions Modal Styles */
+.predictions-modal {
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.prediction-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+.pred-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+.pred-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.pred-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.pred-team-name {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+.pred-team input {
+  width: 50px;
+  text-align: center;
+  font-size: 1.2rem;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #555;
+  background: #222;
+  color: #fff;
+}
+.real-score {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #eab308;
+  background: #111;
+  padding: 5px 15px;
+  border-radius: 5px;
+}
+.pred-vs {
+  font-weight: bold;
+  color: #666;
+}
+.save-pred-btn {
+  width: 100%;
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.save-pred-btn:hover {
+  background: #059669;
+}
+.pred-status {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+.pred-status.pending { background: #3b82f6; color: white; }
+.pred-status.no-bet { background: #6b7280; color: white; }
+.pred-status.correct { background: #10b981; color: white; }
+.pred-status.wrong { background: #ef4444; color: white; }
+.pred-status.missed { background: #9ca3af; color: white; }
+.your-bet-was {
+  text-align: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: #93c5fd;
+}
+
