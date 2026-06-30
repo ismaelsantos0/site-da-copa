@@ -120,6 +120,8 @@ function App() {
   const [allOdds, setAllOdds] = useState([]);
   const [selectedMatchModal, setSelectedMatchModal] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [aiCache, setAiCache] = useState({});
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const getMatchSchedule = (id) => {
     // Tabela realista da Copa 2026 adaptada para o Fuso UTC-4 (Horário de Roraima)
@@ -514,6 +516,43 @@ function App() {
     );
   };
 
+  const generateAIAnalysis = async (matchId, t1, t2, odds) => {
+    if (aiCache[matchId]) return;
+    setIsGeneratingAI(true);
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const systemPrompt = import.meta.env.VITE_GEMINI_PROMPT || "Você é um analista tático esportivo especialista na Copa do Mundo 2026. Analise o confronto e dê os pontos fortes e fracos de forma bem direta e convincente em 2 parágrafos curtos.";
+
+      if (!apiKey) {
+         setAiCache(prev => ({...prev, [matchId]: "⚠️ A chave de API do Gemini não foi configurada nas variáveis de ambiente do Railway (VITE_GEMINI_API_KEY)."}));
+         setIsGeneratingAI(false);
+         return;
+      }
+
+      const promptText = `${systemPrompt}\n\nConfronto: ${t1.n} vs ${t2.n}\nOdd ${t1.n}: ${odds.t1Odd ? odds.t1Odd.toFixed(2) : 'N/A'}\nOdd ${t2.n}: ${odds.t2Odd ? odds.t2Odd.toFixed(2) : 'N/A'}`;
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      });
+
+      const data = await res.json();
+      let text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "A IA não conseguiu gerar uma análise no momento.";
+      
+      // Basic markdown parsing for bold text
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      setAiCache(prev => ({ ...prev, [matchId]: text }));
+    } catch (e) {
+      console.error(e);
+      setAiCache(prev => ({ ...prev, [matchId]: "❌ Erro ao conectar com a IA do Google Gemini." }));
+    }
+    setIsGeneratingAI(false);
+  };
+
   const renderMatchAnalysis = (match, odds) => {
     const t1 = match.t1;
     const t2 = match.t2;
@@ -559,9 +598,26 @@ function App() {
 
     return (
       <div className="match-analysis-box">
-        <h3>🧠 Análise de Inteligência</h3>
+        <h3>📊 Análise Estatística</h3>
         <p>{p1} {p2}</p>
         {p3}
+
+        <div className="ai-analysis-container">
+          {aiCache[match.id] ? (
+            <div className="ai-response-box">
+              <h4>🤖 Visão da Inteligência Artificial</h4>
+              <div className="ai-text" dangerouslySetInnerHTML={{ __html: aiCache[match.id].replace(/\n/g, '<br/>') }}></div>
+            </div>
+          ) : (
+            <button 
+              className="btn-ai-generate" 
+              onClick={() => generateAIAnalysis(match.id, t1, t2, odds)}
+              disabled={isGeneratingAI}
+            >
+              {isGeneratingAI ? '🧠 Analisando...' : '✨ Gerar Análise Profunda com IA'}
+            </button>
+          )}
+        </div>
       </div>
     );
   };
