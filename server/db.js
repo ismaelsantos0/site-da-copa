@@ -1,80 +1,111 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import pg from 'pg';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config();
 
-// Cria ou abre o arquivo db
-const dbPath = path.resolve(__dirname, 'copa.db');
-const db = new sqlite3.Database(dbPath);
+const { Pool } = pg;
 
-// Inicializa as tabelas
-db.serialize(() => {
-  // Cache de Análises de Confrontos
-  db.run(`
-    CREATE TABLE IF NOT EXISTS match_analysis_cache (
-      id TEXT PRIMARY KEY,
-      team1 TEXT,
-      team2 TEXT,
-      analysis TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Dados Básicos das Seleções (Elencos, Estratégias, Ratings)
-  db.run(`
-    CREATE TABLE IF NOT EXISTS teams_info (
-      name TEXT PRIMARY KEY,
-      sportmonks_id INTEGER,
-      tactical_data TEXT,
-      last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  console.log('📦 Banco de Dados SQLite conectado e tabelas (match_cache e teams_info) garantidas.');
+// Inicializa o Pool do PostgreSQL usando a DATABASE_URL
+// Como o Railway muitas vezes usa conexões seguras, adicionamos rejectUnauthorized: false para evitar erros de SSL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('railway') 
+       ? { rejectUnauthorized: false } 
+       : false
 });
 
-// --- Funções da Tabela match_analysis_cache ---
-export const getCachedAnalysis = (matchId) => {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT analysis FROM match_analysis_cache WHERE id = ?', [matchId], (err, row) => {
-      if (err) reject(err);
-      resolve(row ? row.analysis : null);
-    });
-  });
+// Inicializa as tabelas
+const initDB = async () => {
+  try {
+    // Cache de Análises de Confrontos
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS match_analysis_cache (
+        id VARCHAR(255) PRIMARY KEY,
+        team1 VARCHAR(255),
+        team2 VARCHAR(255),
+        analysis TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Dados Básicos das Seleções (Elencos, Estratégias, Ratings)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS teams_info (
+        name VARCHAR(255) PRIMARY KEY,
+        sportmonks_id INTEGER,
+        tactical_data TEXT,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log('🐘 Banco de Dados PostgreSQL conectado e tabelas garantidas.');
+  } catch (err) {
+    console.error('❌ Erro ao conectar no PostgreSQL:', err);
+  }
 };
 
-export const saveAnalysisToCache = (matchId, t1, t2, analysis) => {
-  return new Promise((resolve, reject) => {
-    const stmt = db.prepare('INSERT OR REPLACE INTO match_analysis_cache (id, team1, team2, analysis) VALUES (?, ?, ?, ?)');
-    stmt.run([matchId, t1, t2, analysis], function (err) {
-      if (err) reject(err);
-      resolve(this.lastID);
-    });
-    stmt.finalize();
-  });
+// Executa a inicialização
+initDB();
+
+// --- Funções da Tabela match_analysis_cache ---
+export const getCachedAnalysis = async (matchId) => {
+  try {
+    const res = await pool.query('SELECT analysis FROM match_analysis_cache WHERE id = $1', [matchId]);
+    return res.rows.length > 0 ? res.rows[0].analysis : null;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+export const saveAnalysisToCache = async (matchId, t1, t2, analysis) => {
+  try {
+    const query = `
+      INSERT INTO match_analysis_cache (id, team1, team2, analysis) 
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (id) DO UPDATE SET 
+        team1 = EXCLUDED.team1,
+        team2 = EXCLUDED.team2,
+        analysis = EXCLUDED.analysis,
+        created_at = CURRENT_TIMESTAMP
+    `;
+    await pool.query(query, [matchId, t1, t2, analysis]);
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 };
 
 // --- Funções da Tabela teams_info ---
-export const getTeamInfo = (teamName) => {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT * FROM teams_info WHERE name = ?', [teamName], (err, row) => {
-      if (err) reject(err);
-      resolve(row ? { ...row, tactical_data: JSON.parse(row.tactical_data) } : null);
-    });
-  });
+export const getTeamInfo = async (teamName) => {
+  try {
+    const res = await pool.query('SELECT * FROM teams_info WHERE name = $1', [teamName]);
+    if (res.rows.length > 0) {
+      const row = res.rows[0];
+      return { ...row, tactical_data: JSON.parse(row.tactical_data) };
+    }
+    return null;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 };
 
-export const saveTeamInfo = (teamName, sportmonksId, tacticalData) => {
-  return new Promise((resolve, reject) => {
-    const stmt = db.prepare('INSERT OR REPLACE INTO teams_info (name, sportmonks_id, tactical_data) VALUES (?, ?, ?)');
-    stmt.run([teamName, sportmonksId, JSON.stringify(tacticalData)], function (err) {
-      if (err) reject(err);
-      resolve(this.lastID);
-    });
-    stmt.finalize();
-  });
+export const saveTeamInfo = async (teamName, sportmonksId, tacticalData) => {
+  try {
+    const query = `
+      INSERT INTO teams_info (name, sportmonks_id, tactical_data) 
+      VALUES ($1, $2, $3)
+      ON CONFLICT (name) DO UPDATE SET 
+        sportmonks_id = EXCLUDED.sportmonks_id,
+        tactical_data = EXCLUDED.tactical_data,
+        last_updated = CURRENT_TIMESTAMP
+    `;
+    await pool.query(query, [teamName, sportmonksId, JSON.stringify(tacticalData)]);
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 };
 
-export default db;
+export default pool;

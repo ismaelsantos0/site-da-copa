@@ -1,4 +1,4 @@
-import { saveTeamInfo } from './db.js';
+import pool, { saveTeamInfo } from './db.js';
 
 const teamsData = [
   {
@@ -136,6 +136,9 @@ const seedDatabase = async () => {
     }
   }
   console.log(`🎉 Seed concluído! ${count} seleções cadastradas.`);
+  
+  // Encerra a conexão com o banco para o script poder finalizar
+  await pool.end();
 };
 
 seedDatabase();
