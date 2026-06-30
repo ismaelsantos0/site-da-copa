@@ -79,11 +79,23 @@ const connectionsDef = [
   { from: 'm30', to: 'm31', isLeft: false }
 ];
 
+const teamAbbr = {
+  'Brasil': 'BR', 'Japão': 'JP', 'C. do Marfim': 'CI', 'Noruega': 'NO',
+  'Espanha': 'ES', 'Áustria': 'AT', 'Suíça': 'CH', 'Argélia': 'DZ',
+  'Argentina': 'AR', 'Cabo Verde': 'CV', 'México': 'MX', 'Equador': 'EC',
+  'Holanda': 'NL', 'Marrocos': 'MA', 'Austrália': 'AU', 'Egito': 'EG',
+  'França': 'FR', 'Suécia': 'SE', 'África do Sul': 'ZA', 'Canadá': 'CA',
+  'Colômbia': 'CO', 'Gana': 'GH', 'Inglaterra': 'EN', 'RD Congo': 'CD',
+  'Alemanha': 'DE', 'Paraguai': 'PY', 'Estados Unidos': 'US', 'Bósnia': 'BA',
+  'Portugal': 'PT', 'Croácia': 'HR', 'Bélgica': 'BE', 'Senegal': 'SN'
+};
+
 function App() {
   const [data, setData] = useState(initialMatches);
   const [lines, setLines] = useState([]);
   const [allOdds, setAllOdds] = useState([]);
   const [selectedMatchModal, setSelectedMatchModal] = useState(null);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   const getMatchSchedule = (id) => {
     // Tabela realista da Copa 2026 adaptada para o Fuso UTC-4 (Horário de Roraima)
@@ -260,7 +272,7 @@ function App() {
     });
   };
 
-  const simulateAll = () => {
+  const doSimulation = () => {
     setData(prev => {
       const newData = JSON.parse(JSON.stringify(prev));
       
@@ -270,7 +282,6 @@ function App() {
         const { t1Odd, t2Odd } = getMatchOdds(targetObj.t1.n, targetObj.t2.n);
         if (!t1Odd || !t2Odd) return;
 
-        // If odds are exactly equal, we force a slight favorite deterministic based on name
         const forcedT1Fav = t1Odd === t2Odd ? targetObj.t1.n.length > targetObj.t2.n.length : t1Odd < t2Odd;
         
         const favOdd = forcedT1Fav ? t1Odd : t2Odd;
@@ -293,15 +304,13 @@ function App() {
         targetObj.t1.w = forcedT1Fav;
         targetObj.t2.s = forcedT1Fav ? underGoals : favGoals;
         targetObj.t2.w = !forcedT1Fav;
-        targetObj.status = 'completed'; // Marcar como realizado para dar feedback visual
+        targetObj.status = 'completed';
       };
 
-      // Mapa para descobrir para onde vai o vencedor
       const findNextMatch = (matchId) => {
         const conn = connectionsDef.find(c => c.from === matchId);
         if (!conn) return null;
         
-        // Find the match in newData
         let nextMatch = null;
         if (conn.to === 'm31') nextMatch = newData.final;
         else {
@@ -315,10 +324,7 @@ function App() {
           }
         }
         
-        // Find if we are t1 or t2 in the next match
-        // connectionsDef generally pairs them sequentially
         const isT1 = connectionsDef.filter(c => c.to === conn.to)[0].from === matchId;
-        
         return { match: nextMatch, isT1 };
       };
 
@@ -346,7 +352,6 @@ function App() {
         });
       });
 
-      // Process Final
       processMatch(newData.final);
       if (newData.final.t1.w !== undefined) {
         if (newData.final.t1.w) newData.final.champ = { f: newData.final.t1.f, n: newData.final.t1.n };
@@ -355,6 +360,14 @@ function App() {
       
       return newData;
     });
+  };
+
+  const simulateAll = () => {
+    setIsSimulating(true);
+    setTimeout(() => {
+      doSimulation();
+      setTimeout(() => setIsSimulating(false), 800);
+    }, 3500);
   };
 
   useEffect(() => {
@@ -398,16 +411,12 @@ function App() {
   }, [data, allOdds]);
 
   const renderTeam = (t, side, round, matchObj, teamKey) => {
-    const { t1Odd, t2Odd } = getMatchOdds(matchObj.t1.n, matchObj.t2.n);
-    const myOdd = teamKey === 't1' ? t1Odd : t2Odd;
-    const opponentOdd = teamKey === 't1' ? t2Odd : t1Odd;
-    const isFav = myOdd && opponentOdd && myOdd < opponentOdd;
+    const abbr = teamAbbr[t.n] || (t.n ? t.n.substring(0, 2).toUpperCase() : '??');
 
     return (
       <div className={`team ${t.w ? 'winner' : ''}`}>
-        {myOdd && <span className={`inline-odd-badge ${isFav ? 'fav' : ''}`}>{myOdd.toFixed(2)}</span>}
         <span className="team-flag">{t.f}</span>
-        <span className="team-name">{t.n}</span>
+        <span className="team-abbr">{abbr}</span>
         <span className="team-score">{t.s}</span>
       </div>
     );
@@ -425,16 +434,6 @@ function App() {
           >
             {renderTeam(matches[i].t1, side, roundName, matches[i], 't1')}
             {renderTeam(matches[i].t2, side, roundName, matches[i], 't2')}
-            
-            {matches[i].status !== 'completed' && (
-              <div 
-                className="magic-wand" 
-                onClick={(e) => { e.stopPropagation(); applyMagicPrediction(matches[i], side, roundName); }} 
-                title="Prever vencedor com IA Tática"
-              >
-                🪄
-              </div>
-            )}
           </div>
 
           {matches[i+1] && (
@@ -445,16 +444,6 @@ function App() {
             >
               {renderTeam(matches[i+1].t1, side, roundName, matches[i+1], 't1')}
               {renderTeam(matches[i+1].t2, side, roundName, matches[i+1], 't2')}
-              
-              {matches[i+1].status !== 'completed' && (
-                <div 
-                  className="magic-wand" 
-                  onClick={(e) => { e.stopPropagation(); applyMagicPrediction(matches[i+1], side, roundName); }} 
-                  title="Prever vencedor com IA Tática"
-                >
-                  🪄
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -541,6 +530,20 @@ function App() {
   return (
     <>
       {renderModal()}
+      {isSimulating && (
+        <div className="simulation-overlay">
+          <div className="simulation-content">
+            <div className="sim-spinner"></div>
+            <h2 className="sim-title">Analisando dados...</h2>
+            <div className="sim-steps">
+              <p className="sim-step step-1">📊 Cruzando estatísticas de ataque e defesa</p>
+              <p className="sim-step step-2">⚔️ Calculando vantagens táticas</p>
+              <p className="sim-step step-3">🎯 Projetando placares prováveis</p>
+              <p className="sim-step step-4">🏆 Definindo o campeão</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="background-overlay"></div>
       
       <div className="app-header">
@@ -588,16 +591,6 @@ function App() {
                    <div className="final-label">⚽ GRANDE FINAL</div>
                   {renderTeam(data.final.t1, 'final', null, data.final, 't1')}
                   {renderTeam(data.final.t2, 'final', null, data.final, 't2')}
-                  
-                  {data.final.status !== 'completed' && (
-                    <div 
-                      className="magic-wand final-wand" 
-                      onClick={(e) => { e.stopPropagation(); applyMagicPrediction(data.final, 'final', null); }} 
-                      title="Prever vencedor da Copa"
-                    >
-                      🪄
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

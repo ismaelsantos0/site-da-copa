@@ -515,3 +515,90 @@
 .modal-tbd { text-align: center; padding: 40px 20px; color: #888; }
 .tbd-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
 
+
+/* Abreviacao 2 letras */
+.team-abbr {
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  flex: 1;
+  color: #ddd;
+}
+.team.winner .team-abbr { color: #fff; }
+
+/* Tela de Loading Dramatica */
+.simulation-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(5, 8, 20, 0.95);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInSim 0.3s ease;
+}
+
+@keyframes fadeInSim {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.simulation-content {
+  text-align: center;
+  color: #fff;
+}
+
+.sim-spinner {
+  width: 70px; height: 70px;
+  margin: 0 auto 25px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-top: 4px solid var(--primary);
+  border-right: 4px solid #0088ff;
+  border-radius: 50%;
+  animation: spinSim 0.8s linear infinite;
+}
+
+@keyframes spinSim {
+  to { transform: rotate(360deg); }
+}
+
+.sim-title {
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+  background: linear-gradient(135deg, var(--primary), #0088ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulseSim 1.5s ease infinite;
+}
+
+@keyframes pulseSim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.sim-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sim-step {
+  font-size: 1rem;
+  color: #555;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: stepAppear 0.5s ease forwards;
+}
+
+.sim-step.step-1 { animation-delay: 0.3s; }
+.sim-step.step-2 { animation-delay: 1.0s; }
+.sim-step.step-3 { animation-delay: 1.8s; }
+.sim-step.step-4 { animation-delay: 2.6s; }
+
+@keyframes stepAppear {
+  to { opacity: 1; color: #ccc; transform: translateY(0); }
+}
+
+/* Clickable cursor */
+.match.clickable { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.match.clickable:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 255, 170, 0.15); }
+
