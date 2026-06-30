@@ -234,15 +234,16 @@ function App() {
       const newData = JSON.parse(JSON.stringify(prev));
       
       const processMatch = (targetObj) => {
-        if (targetObj.status === 'completed') return;
         if (!targetObj.t1.n || !targetObj.t2.n) return;
         
         const { t1Odd, t2Odd } = getMatchOdds(targetObj.t1.n, targetObj.t2.n);
-        if (!t1Odd || !t2Odd || t1Odd === t2Odd) return;
+        if (!t1Odd || !t2Odd) return;
 
-        const isT1Fav = t1Odd < t2Odd;
-        const favOdd = isT1Fav ? t1Odd : t2Odd;
-        const underdogOdd = isT1Fav ? t2Odd : t1Odd;
+        // If odds are exactly equal, we force a slight favorite deterministic based on name
+        const forcedT1Fav = t1Odd === t2Odd ? targetObj.t1.n.length > targetObj.t2.n.length : t1Odd < t2Odd;
+        
+        const favOdd = forcedT1Fav ? t1Odd : t2Odd;
+        const underdogOdd = forcedT1Fav ? t2Odd : t1Odd;
         const diff = underdogOdd - favOdd;
         
         let favGoals, underGoals;
@@ -250,23 +251,72 @@ function App() {
         if (diff > 5.0) { favGoals = '4'; underGoals = '0'; }
         else if (diff > 2.5) { favGoals = '3'; underGoals = '0'; }
         else if (diff > 1.2) { favGoals = '2'; underGoals = '0'; }
-        else if (diff > 0.5) { favGoals = '2'; underGoals = '1'; }
+        else if (diff > 0.3) { favGoals = '2'; underGoals = '1'; }
         else {
           const favPens = 4 + (targetObj.t1.n.length % 2);
           const underPens = favPens - 1;
           favGoals = `1(${favPens})`; underGoals = `1(${underPens})`;
         }
         
-        targetObj.t1.s = isT1Fav ? favGoals : underGoals;
-        targetObj.t1.w = isT1Fav;
-        targetObj.t2.s = isT1Fav ? underGoals : favGoals;
-        targetObj.t2.w = !isT1Fav;
+        targetObj.t1.s = forcedT1Fav ? favGoals : underGoals;
+        targetObj.t1.w = forcedT1Fav;
+        targetObj.t2.s = forcedT1Fav ? underGoals : favGoals;
+        targetObj.t2.w = !forcedT1Fav;
+        targetObj.status = 'completed'; // Marcar como realizado para dar feedback visual
       };
 
-      Object.keys(newData.left).forEach(round => newData.left[round].forEach(processMatch));
-      Object.keys(newData.right).forEach(round => newData.right[round].forEach(processMatch));
+      // Mapa para descobrir para onde vai o vencedor
+      const findNextMatch = (matchId) => {
+        const conn = connectionsDef.find(c => c.from === matchId);
+        if (!conn) return null;
+        
+        // Find the match in newData
+        let nextMatch = null;
+        if (conn.to === 'm31') nextMatch = newData.final;
+        else {
+          const sides = ['left', 'right'];
+          const rounds = ['round1', 'round2', 'round3', 'round4'];
+          for (let s of sides) {
+            for (let r of rounds) {
+              const m = newData[s][r].find(x => x.id === conn.to);
+              if (m) nextMatch = m;
+            }
+          }
+        }
+        
+        // Find if we are t1 or t2 in the next match
+        // connectionsDef generally pairs them sequentially
+        const isT1 = connectionsDef.filter(c => c.to === conn.to)[0].from === matchId;
+        
+        return { match: nextMatch, isT1 };
+      };
+
+      const propagateWinner = (matchObj) => {
+        if (!matchObj.t1.w && !matchObj.t2.w) return;
+        const next = findNextMatch(matchObj.id);
+        if (next && next.match) {
+          const winnerTeam = matchObj.t1.w ? matchObj.t1 : matchObj.t2;
+          const targetTeam = next.isT1 ? next.match.t1 : next.match.t2;
+          targetTeam.n = winnerTeam.n;
+          targetTeam.f = winnerTeam.f;
+          targetTeam.s = '';
+          targetTeam.w = false;
+          next.match.status = 'prediction';
+        }
+      };
+
+      const roundsSequence = ['round1', 'round2', 'round3', 'round4'];
+      roundsSequence.forEach(round => {
+        ['left', 'right'].forEach(side => {
+          newData[side][round].forEach(m => {
+            processMatch(m);
+            propagateWinner(m);
+          });
+        });
+      });
+
+      // Process Final
       processMatch(newData.final);
-      
       if (newData.final.t1.w !== undefined) {
         if (newData.final.t1.w) newData.final.champ = { f: newData.final.t1.f, n: newData.final.t1.n };
         else if (newData.final.t2.w) newData.final.champ = { f: newData.final.t2.f, n: newData.final.t2.n };
