@@ -389,8 +389,14 @@ function App() {
   const simulateAll = () => {
     setIsSimulating(true);
     setTimeout(() => {
-      doSimulation();
-      setTimeout(() => setIsSimulating(false), 800);
+      try {
+        doSimulation();
+      } catch (err) {
+        alert("Erro na simulação: " + err.message);
+        console.error(err);
+      } finally {
+        setTimeout(() => setIsSimulating(false), 800);
+      }
     }, 3500);
   };
 
@@ -576,7 +582,14 @@ function App() {
       
       <div className="app-header">
         <h1>🏆 Copa do Mundo 2026</h1>
-        <button className="btn-predict-all" onClick={simulateAll}>🪄 Simular Tudo</button>
+        <button 
+          className="btn-predict-all" 
+          onClick={simulateAll}
+          disabled={isSimulating}
+          style={{ opacity: isSimulating ? 0.7 : 1, cursor: isSimulating ? 'not-allowed' : 'pointer' }}
+        >
+          {isSimulating ? '⏳ Aguarde...' : '🪄 Simular Tudo'}
+        </button>
       </div>
 
       <TransformWrapper 
