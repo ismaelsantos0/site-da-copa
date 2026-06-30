@@ -83,6 +83,35 @@ function App() {
   const [data, setData] = useState(initialMatches);
   const [lines, setLines] = useState([]);
   const [allOdds, setAllOdds] = useState([]);
+  const [selectedMatchModal, setSelectedMatchModal] = useState(null);
+
+  const getMatchSchedule = (id) => {
+    // Tabela realista da Copa 2026 adaptada para o Fuso UTC-4 (Horário de Roraima)
+    const schedules = {
+      // 16 avos de final (28 Jun - 3 Jul)
+      'm1': '28 Jun 2026 • 12:00 (Roraima)', 'm2': '28 Jun 2026 • 16:00 (Roraima)',
+      'm3': '29 Jun 2026 • 11:00 (Roraima)', 'm4': '29 Jun 2026 • 15:00 (Roraima)',
+      'm5': '29 Jun 2026 • 19:00 (Roraima)', 'm6': '30 Jun 2026 • 12:00 (Roraima)',
+      'm7': '30 Jun 2026 • 16:00 (Roraima)', 'm8': '30 Jun 2026 • 20:00 (Roraima)',
+      'm9': '01 Jul 2026 • 12:00 (Roraima)', 'm10': '01 Jul 2026 • 16:00 (Roraima)',
+      'm11': '02 Jul 2026 • 11:00 (Roraima)', 'm12': '02 Jul 2026 • 15:00 (Roraima)',
+      'm13': '02 Jul 2026 • 19:00 (Roraima)', 'm14': '03 Jul 2026 • 12:00 (Roraima)',
+      'm15': '03 Jul 2026 • 16:00 (Roraima)', 'm16': '03 Jul 2026 • 20:00 (Roraima)',
+      // Oitavas (4 Jul - 7 Jul)
+      'm17': '04 Jul 2026 • 14:00 (Roraima)', 'm18': '04 Jul 2026 • 18:00 (Roraima)',
+      'm19': '05 Jul 2026 • 14:00 (Roraima)', 'm20': '05 Jul 2026 • 18:00 (Roraima)',
+      'm21': '06 Jul 2026 • 14:00 (Roraima)', 'm22': '06 Jul 2026 • 18:00 (Roraima)',
+      'm23': '07 Jul 2026 • 14:00 (Roraima)', 'm24': '07 Jul 2026 • 18:00 (Roraima)',
+      // Quartas (9 Jul - 11 Jul)
+      'm25': '09 Jul 2026 • 16:00 (Roraima)', 'm26': '10 Jul 2026 • 16:00 (Roraima)',
+      'm27': '11 Jul 2026 • 13:00 (Roraima)', 'm28': '11 Jul 2026 • 17:00 (Roraima)',
+      // Semis (14 Jul - 15 Jul)
+      'm29': '14 Jul 2026 • 16:00 (Roraima)', 'm30': '15 Jul 2026 • 16:00 (Roraima)',
+      // Final (19 Jul)
+      'm31': '19 Jul 2026 • 15:00 (Roraima)'
+    };
+    return schedules[id] || 'Data a definir';
+  };
   const [oddsFetched, setOddsFetched] = useState(false);
   const containerRef = useRef(null);
 
@@ -375,61 +404,144 @@ function App() {
     return (
       <div className={`team ${t.w ? 'winner' : ''}`}>
         {myOdd && <span className={`inline-odd-badge ${isFav ? 'fav' : ''}`}>{myOdd.toFixed(2)}</span>}
-        <input 
-          className="editable-input team-flag-input" 
-          value={t.f} 
-          onChange={(e) => updateMatch(side, round, matchObj.id, teamKey, 'f', e.target.value)}
-        />
-        <input 
-          className="editable-input" 
-          value={t.n} 
-          onChange={(e) => updateMatch(side, round, matchObj.id, teamKey, 'n', e.target.value)}
-        />
-        <input 
-          className="editable-input team-score-input" 
-          value={t.s} 
-          onChange={(e) => updateMatch(side, round, matchObj.id, teamKey, 's', e.target.value)}
-        />
+        <span className="team-flag">{t.f}</span>
+        <span className="team-name">{t.n}</span>
+        <span className="team-score">{t.s}</span>
       </div>
     );
   };
 
-  const renderRound = (matches, side, roundName, isSingle = false) => {
+  const renderRound = (matches, side, roundName) => {
     const connectors = [];
     for (let i = 0; i < matches.length; i += 2) {
       connectors.push(
-        <div key={i} className="match-connector">
-          <div className={`match ${matches[i].status}`} id={matches[i].id}>
-            <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i].id); }} title="Alternar Status">↺</button>
-            <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyMagicPrediction(matches[i], side, roundName); }} title="Mágica: Prever Vencedor">🪄</button>
-            {renderTeam(matches[i].t1, side, roundName, matches[i], 't1')}
-            {renderTeam(matches[i].t2, side, roundName, matches[i], 't2')}
+        <div key={i} className="connector-block">
+          <div 
+            id={matches[i].id} 
+            className={`match ${matches[i].status} clickable`}
+            onClick={() => setSelectedMatchModal({ match: matches[i], side, round: roundName, odds: getMatchOdds(matches[i].t1.n, matches[i].t2.n) })}
+          >
+            {renderTeam(matches[i].t1, matches[i].t2, matches[i], side, roundName, true)}
+            {renderTeam(matches[i].t2, matches[i].t1, matches[i], side, roundName, false)}
+            
+            {matches[i].status !== 'completed' && (
+              <div 
+                className="magic-wand" 
+                onClick={(e) => { e.stopPropagation(); applyMagicPrediction(matches[i], side, roundName); }} 
+                title="Prever vencedor com IA Tática"
+              >
+                🪄
+              </div>
+            )}
           </div>
-          {matches[i+1] && (
-            <div className={`match ${matches[i+1].status}`} id={matches[i+1].id}>
-              <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i+1].id); }} title="Alternar Status">↺</button>
-              <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyMagicPrediction(matches[i+1], side, roundName); }} title="Mágica: Prever Vencedor">🪄</button>
-              {renderTeam(matches[i+1].t1, side, roundName, matches[i+1], 't1')}
-              {renderTeam(matches[i+1].t2, side, roundName, matches[i+1], 't2')}
-            </div>
-          )}
+
+          <div 
+            id={matches[i+1].id} 
+            className={`match ${matches[i+1].status} clickable`}
+            onClick={() => setSelectedMatchModal({ match: matches[i+1], side, round: roundName, odds: getMatchOdds(matches[i+1].t1.n, matches[i+1].t2.n) })}
+          >
+            {renderTeam(matches[i+1].t1, matches[i+1].t2, matches[i+1], side, roundName, true)}
+            {renderTeam(matches[i+1].t2, matches[i+1].t1, matches[i+1], side, roundName, false)}
+            
+            {matches[i+1].status !== 'completed' && (
+              <div 
+                className="magic-wand" 
+                onClick={(e) => { e.stopPropagation(); applyMagicPrediction(matches[i+1], side, roundName); }} 
+                title="Prever vencedor com IA Tática"
+              >
+                🪄
+              </div>
+            )}
+          </div>
         </div>
       );
     }
-    return connectors;
+    return <div className="round">{connectors}</div>;
+  };
+
+  const renderStatBar = (team1, team2, label, statKey) => {
+    const s1 = teamStats[team1]?.[statKey] || 75;
+    const s2 = teamStats[team2]?.[statKey] || 75;
+    
+    const max = 100;
+    const p1 = (s1 / max) * 100;
+    const p2 = (s2 / max) * 100;
+    
+    return (
+      <div className="stat-row">
+        <div className="stat-label">{label}</div>
+        <div className="stat-bars">
+          <span className="stat-val v1">{s1}</span>
+          <div className="bar-wrapper b1">
+            <div className="bar-fill" style={{width: `${p1}%`}}></div>
+          </div>
+          
+          <div className="bar-wrapper b2">
+            <div className="bar-fill" style={{width: `${p2}%`}}></div>
+          </div>
+          <span className="stat-val v2">{s2}</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderModal = () => {
+    if (!selectedMatchModal) return null;
+    const { match, side, round, odds } = selectedMatchModal;
+    
+    // Check if both teams are defined
+    const isDefined = match.t1.n && match.t2.n;
+    const schedule = getMatchSchedule(match.id);
+
+    return (
+      <div className="modal-overlay" onClick={() => setSelectedMatchModal(null)}>
+        <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+          <button className="close-btn" onClick={() => setSelectedMatchModal(null)}>✖</button>
+          
+          <h2 className="modal-title">Detalhes da Partida</h2>
+          <div className="modal-schedule">📅 {schedule}</div>
+
+          {isDefined ? (
+            <div className="modal-teams-stats">
+              <div className="modal-team-row">
+                <span className="modal-flag">{match.t1.f}</span>
+                <span className="modal-name">{match.t1.n}</span>
+                <span className="modal-odd">{odds.t1Odd ? odds.t1Odd.toFixed(2) : '-'}</span>
+              </div>
+              <div className="modal-vs">VS</div>
+              <div className="modal-team-row">
+                <span className="modal-flag">{match.t2.f}</span>
+                <span className="modal-name">{match.t2.n}</span>
+                <span className="modal-odd">{odds.t2Odd ? odds.t2Odd.toFixed(2) : '-'}</span>
+              </div>
+              
+              <div className="stats-container">
+                <h3>Estatísticas Táticas</h3>
+                {renderStatBar(match.t1.n, match.t2.n, 'Ataque', 'attack')}
+                {renderStatBar(match.t1.n, match.t2.n, 'Defesa', 'defense')}
+                {renderStatBar(match.t1.n, match.t2.n, 'Retrospecto', 'form')}
+              </div>
+            </div>
+          ) : (
+            <div className="modal-tbd">
+              <span className="tbd-icon">⏳</span>
+              <p>Confronto a definir</p>
+              <small>Esta partida depende dos resultados anteriores para sabermos quem vai jogar.</small>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
     <>
+      {renderModal()}
       <div className="background-overlay"></div>
       
       <div className="app-header">
         <h1>🏆 Copa do Mundo 2026</h1>
         <button className="btn-predict-all" onClick={simulateAll}>🪄 Simular Tudo</button>
-        <div className="legend">
-          <div className="legend-item"><div className="legend-color completed"></div> Realizado</div>
-          <div className="legend-item"><div className="legend-color prediction"></div> Palpite</div>
-        </div>
       </div>
 
       <TransformWrapper 
@@ -452,11 +564,10 @@ function App() {
               <div className="round round-1">{renderRound(data.left.round1, 'left', 'round1')}</div>
               <div className="round round-2">{renderRound(data.left.round2, 'left', 'round2')}</div>
               <div className="round round-3">{renderRound(data.left.round3, 'left', 'round3')}</div>
-              <div className="round round-4">{renderRound(data.left.round4, 'left', 'round4', true)}</div>
+              <div className="round round-4">{renderRound(data.left.round4, 'left', 'round4')}</div>
             </div>
 
-            <div className="center-stage">
-              <div className="trophy">🏆</div>
+            <div className="final-wrapper">
               <div className="champion-box">
                 <h2>CAMPEÃO</h2>
                 <div className="champ-team">
