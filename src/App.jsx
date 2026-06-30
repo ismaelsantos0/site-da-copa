@@ -603,19 +603,11 @@ function App() {
         {p3}
 
         <div className="ai-analysis-container">
-          {aiCache[match.id] ? (
+          {aiCache[match.id] && (
             <div className="ai-response-box">
               <h4>🤖 Visão da Inteligência Artificial</h4>
               <div className="ai-text" dangerouslySetInnerHTML={{ __html: aiCache[match.id].replace(/\n/g, '<br/>') }}></div>
             </div>
-          ) : (
-            <button 
-              className="btn-ai-generate" 
-              onClick={() => generateAIAnalysis(match.id, t1, t2, odds)}
-              disabled={isGeneratingAI}
-            >
-              {isGeneratingAI ? '🧠 Analisando...' : '✨ Gerar Análise Profunda com IA'}
-            </button>
           )}
         </div>
       </div>
