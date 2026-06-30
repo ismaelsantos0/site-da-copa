@@ -815,8 +815,8 @@ function App() {
           <div className="team-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={closeTeamModal}>&times;</button>
             <div className="team-modal-header">
-              <img src={`https://flagcdn.com/w160/${teamInfo[selectedTeam.nome]?.iso || ''}.png`} className="team-modal-flag" alt={selectedTeam.nome} />
-              <h2>{selectedTeam.nome}</h2>
+              <img src={`https://flagcdn.com/w160/${teamInfo[selectedTeam.nome || selectedTeam.name]?.iso || ''}.png`} className="team-modal-flag" alt={selectedTeam.nome || selectedTeam.name} />
+              <h2>{selectedTeam.nome || selectedTeam.name}</h2>
             </div>
             
             <div className="team-modal-body">
