@@ -40,20 +40,28 @@ app.get('/api/analysis/:matchId', async (req, res) => {
 
     let tacticalContext = "";
     if (team1Data && team2Data) {
+       // Extrai apenas nomes dos titulares para não poluir muito o prompt se não for necessário, ou passa as notas
+       const t1Titulares = team1Data.tactical_data.titulares.map(t => `${t.nome} (${t.posicao} - Nota: ${t.nota})`).join(', ');
+       const t2Titulares = team2Data.tactical_data.titulares.map(t => `${t.nome} (${t.posicao} - Nota: ${t.nota})`).join(', ');
+
        tacticalContext = `
        === DADOS TÁTICOS BASE (${t1}) ===
-       - Escalação Base: ${team1Data.tactical_data.starters.join(', ')}
-       - Estratégia: ${team1Data.tactical_data.strategy}
-       - Destaque: ${team1Data.tactical_data.keyPlayer}
-       - Fraqueza: ${team1Data.tactical_data.weakness}
-       - Notas (0-10): Ataque ${team1Data.tactical_data.ratings.attack} | Defesa ${team1Data.tactical_data.ratings.defense} | Meio ${team1Data.tactical_data.ratings.midfield}
+       - Titulares Oficiais: ${t1Titulares}
+       - Estratégia Principal: ${team1Data.tactical_data.estrategia_principal}
+       - Modo Operanti: ${team1Data.tactical_data.modo_operanti}
+       - Destaque: ${team1Data.tactical_data.jogador_chave}
+       - Pontos Fortes: ${team1Data.tactical_data.pontos_fortes}
+       - Fraqueza Mapeada: ${team1Data.tactical_data.pontos_fracos}
+       - Qualidade do Setor (0-10): Ataque ${team1Data.tactical_data.notas_gerais.ataque} | Defesa ${team1Data.tactical_data.notas_gerais.defesa} | Meio ${team1Data.tactical_data.notas_gerais.meio}
 
        === DADOS TÁTICOS BASE (${t2}) ===
-       - Escalação Base: ${team2Data.tactical_data.starters.join(', ')}
-       - Estratégia: ${team2Data.tactical_data.strategy}
-       - Destaque: ${team2Data.tactical_data.keyPlayer}
-       - Fraqueza: ${team2Data.tactical_data.weakness}
-       - Notas (0-10): Ataque ${team2Data.tactical_data.ratings.attack} | Defesa ${team2Data.tactical_data.ratings.defense} | Meio ${team2Data.tactical_data.ratings.midfield}
+       - Titulares Oficiais: ${t2Titulares}
+       - Estratégia Principal: ${team2Data.tactical_data.estrategia_principal}
+       - Modo Operanti: ${team2Data.tactical_data.modo_operanti}
+       - Destaque: ${team2Data.tactical_data.jogador_chave}
+       - Pontos Fortes: ${team2Data.tactical_data.pontos_fortes}
+       - Fraqueza Mapeada: ${team2Data.tactical_data.pontos_fracos}
+       - Qualidade do Setor (0-10): Ataque ${team2Data.tactical_data.notas_gerais.ataque} | Defesa ${team2Data.tactical_data.notas_gerais.defesa} | Meio ${team2Data.tactical_data.notas_gerais.meio}
        `;
     } else {
        tacticalContext = `[Aviso: Dados táticos base ausentes no DB. Use conhecimento geral para ${t1} e ${t2}.]`;
