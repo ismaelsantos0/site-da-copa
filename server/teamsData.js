@@ -1,3 +1,5 @@
+import { missingTeams } from './missingTeams.js';
+
 export const teamsData = [
   {
     nome: 'Brasil',
@@ -319,6 +321,5 @@ export const teamsData = [
     }
   }
 ];
-// Para poupar memória, as 22 seleções restantes do chaveamento seguirão o exato mesmo padrão de JSON quando formos expandir.
 
-export default teamsData;
+export default [...teamsData, ...missingTeams];
