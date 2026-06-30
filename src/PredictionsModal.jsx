@@ -80,10 +80,12 @@ const PredictionsModal = ({ onClose }) => {
           <div className="loading-spinner"></div>
         ) : (
           <div className="predictions-list">
-            {matches.length === 0 ? (
+            {matches.filter(m => m.status === 'CONFIRMED' || m.status === 'FINISHED').length === 0 ? (
               <p className="no-matches">Nenhuma partida real confirmada ainda. O mata-mata começa em Julho de 2026!</p>
             ) : (
-              matches.map(m => (
+              matches
+                .filter(m => m.status === 'CONFIRMED' || m.status === 'FINISHED')
+                .map(m => (
                 <div key={m.id} className="prediction-card">
                   <div className="pred-header">
                     <span className="pred-stage">{m.stage}</span>
