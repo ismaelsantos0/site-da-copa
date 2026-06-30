@@ -827,9 +827,12 @@ function App() {
               ) : (
                 <>
                   <div className="tactical-summary">
-                    <h3>Modo Operanti</h3>
-                    <p>{selectedTeam.tactical_data.modo_operanti}</p>
-                    <p><strong>Destaque:</strong> {selectedTeam.tactical_data.jogador_chave}</p>
+                    <h3>Estratégia e Estilo de Jogo</h3>
+                    <p><strong>Estratégia Principal:</strong> {selectedTeam.tactical_data.estrategia_principal}</p>
+                    <p><strong>Modo Operanti:</strong> {selectedTeam.tactical_data.modo_operanti}</p>
+                    <p><strong>Pontos Fortes:</strong> <span style={{color: '#4ade80'}}>{selectedTeam.tactical_data.pontos_fortes}</span></p>
+                    <p><strong>Pontos Fracos:</strong> <span style={{color: '#f87171'}}>{selectedTeam.tactical_data.pontos_fracos}</span></p>
+                    <p><strong>Destaque:</strong> <span style={{color: '#fbbf24'}}>{selectedTeam.tactical_data.jogador_chave}</span></p>
                   </div>
 
                   <div className="roster-section">
