@@ -139,6 +139,22 @@ app.get('/api/analysis/:matchId', async (req, res) => {
   }
 });
 
+// Nova rota: Busca os dados completos (Vestiário/Escalação) de uma Seleção
+app.get('/api/team/:nome', async (req, res) => {
+  const { nome } = req.params;
+  try {
+    const teamData = await getTeamInfo(nome);
+    if (teamData) {
+      res.json(teamData);
+    } else {
+      res.status(404).json({ error: 'Seleção não encontrada no banco de dados.' });
+    }
+  } catch (error) {
+    console.error(`[❌] Erro ao buscar seleção ${nome}:`, error.message);
+    res.status(500).json({ error: 'Falha ao buscar seleção.' });
+  }
+});
+
 app.listen(PORT, async () => {
   console.log(`🚀 Servidor da Copa 2026 rodando na porta ${PORT}`);
   

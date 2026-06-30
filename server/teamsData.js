@@ -322,4 +322,25 @@ export const teamsData = [
   }
 ];
 
-export default [...teamsData, ...missingTeams];
+const allTeams = [...teamsData, ...missingTeams];
+
+// Injeta os novos atributos de estatísticas (gols e cartões) em todos os jogadores automaticamente
+const enrichedTeams = allTeams.map(team => {
+  const enrichPlayer = (p) => ({
+    ...p,
+    gols: p.gols || 0,
+    cartoes_amarelos: p.cartoes_amarelos || 0,
+    cartoes_vermelhos: p.cartoes_vermelhos || 0
+  });
+  
+  return {
+    ...team,
+    taticas: {
+      ...team.taticas,
+      titulares: team.taticas.titulares.map(enrichPlayer),
+      reservas: team.taticas.reservas.map(enrichPlayer)
+    }
+  };
+});
+
+export default enrichedTeams;

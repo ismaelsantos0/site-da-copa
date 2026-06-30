@@ -115,6 +115,9 @@ const teamInfo = {
 };
 
 function App() {
+  const [modalMatch, setModalMatch] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [teamDataCache, setTeamDataCache] = useState({});
   const [data, setData] = useState(initialMatches);
   const [lines, setLines] = useState([]);
   const [allOdds, setAllOdds] = useState([]);
@@ -151,6 +154,29 @@ function App() {
 
     fetchAnalysisFromBackend();
   }, [selectedMatchModal, aiCache]);
+
+  const openTeamModal = async (teamName) => {
+    setSelectedTeam({ loading: true, nome: teamName });
+    if (teamDataCache[teamName]) {
+      setSelectedTeam(teamDataCache[teamName]);
+    } else {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const res = await fetch(`${apiUrl}/api/team/${encodeURIComponent(teamName)}`);
+        if (res.ok) {
+          const tData = await res.json();
+          setTeamDataCache(prev => ({ ...prev, [teamName]: tData }));
+          setSelectedTeam(tData);
+        } else {
+          setSelectedTeam({ error: 'Ficha da seleção não encontrada.', nome: teamName });
+        }
+      } catch (err) {
+        setSelectedTeam({ error: 'Erro de conexão com a nuvem.', nome: teamName });
+      }
+    }
+  };
+
+  const closeTeamModal = () => setSelectedTeam(null);
 
   const getMatchSchedule = (id) => {
     // Tabela realista da Copa 2026 adaptada para o Fuso UTC-4 (Horário de Roraima)
@@ -479,7 +505,7 @@ function App() {
     return (
       <div className={`team ${t.w ? 'winner' : ''}`}>
         {info.iso ? (
-          <img src={`https://flagcdn.com/w40/${info.iso}.png`} alt={t.n} className="team-flag-img" />
+          <img src={`https://flagcdn.com/w40/${info.iso}.png`} alt={t.n} className="team-flag-img cursor-pointer" onClick={(e) => { e.stopPropagation(); openTeamModal(t.n); }} />
         ) : (
           <div className="team-flag-placeholder"></div>
         )}
@@ -755,6 +781,73 @@ function App() {
           </div>
         </TransformComponent>
       </TransformWrapper>
+
+      {/* MODAL DE VESTIÁRIO (ESCALAÇÃO DA SELEÇÃO) */}
+      {selectedTeam && (
+        <div className="modal-overlay" onClick={closeTeamModal}>
+          <div className="team-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeTeamModal}>&times;</button>
+            <div className="team-modal-header">
+              <img src={`https://flagcdn.com/w160/${teamInfo[selectedTeam.nome]?.iso || ''}.png`} className="team-modal-flag" alt={selectedTeam.nome} />
+              <h2>{selectedTeam.nome}</h2>
+            </div>
+            
+            <div className="team-modal-body">
+              {selectedTeam.loading ? (
+                <div className="loading-spinner">Buscando ficha na nuvem...</div>
+              ) : selectedTeam.error ? (
+                <div className="error-msg">{selectedTeam.error}</div>
+              ) : (
+                <>
+                  <div className="tactical-summary">
+                    <h3>Modo Operanti</h3>
+                    <p>{selectedTeam.taticas.modo_operanti}</p>
+                    <p><strong>Destaque:</strong> {selectedTeam.taticas.jogador_chave}</p>
+                  </div>
+
+                  <div className="roster-section">
+                    <h3>Titulares Oficiais</h3>
+                    <div className="roster-list">
+                      {selectedTeam.taticas.titulares.map((p, i) => (
+                        <div key={i} className="player-row titular-row">
+                          <span className="player-pos">{p.posicao}</span>
+                          <span className="player-name">{p.nome}</span>
+                          <span className="player-stats">
+                            {p.gols > 0 && <span className="stat-icon">⚽ {p.gols}</span>}
+                            {p.cartoes_amarelos > 0 && <span className="stat-icon yellow-card">🟨 {p.cartoes_amarelos}</span>}
+                            {p.cartoes_vermelhos > 0 && <span className="stat-icon red-card">🟥 {p.cartoes_vermelhos}</span>}
+                            {p.status !== "ok" && <span className="stat-icon injury">❤️‍🩹</span>}
+                            <span className="player-rating">⭐ {p.nota}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="roster-section mt-4">
+                    <h3>Banco de Reservas</h3>
+                    <div className="roster-list">
+                      {selectedTeam.taticas.reservas.map((p, i) => (
+                        <div key={i} className="player-row reserva-row">
+                          <span className="player-pos">{p.posicao}</span>
+                          <span className="player-name">{p.nome}</span>
+                          <span className="player-stats">
+                            {p.gols > 0 && <span className="stat-icon">⚽ {p.gols}</span>}
+                            {p.cartoes_amarelos > 0 && <span className="stat-icon yellow-card">🟨 {p.cartoes_amarelos}</span>}
+                            {p.cartoes_vermelhos > 0 && <span className="stat-icon red-card">🟥 {p.cartoes_vermelhos}</span>}
+                            {p.status !== "ok" && <span className="stat-icon injury">❤️‍🩹</span>}
+                            <span className="player-rating">⭐ {p.nota}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
