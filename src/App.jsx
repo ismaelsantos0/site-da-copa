@@ -122,13 +122,15 @@ function App() {
   const [lines, setLines] = useState([]);
   const [allOdds, setAllOdds] = useState([]);
   const [selectedMatchModal, setSelectedMatchModal] = useState(null);
+  const [matchNotes, setMatchNotes] = useState('');
+  const [h2hData, setH2hData] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [aiCache, setAiCache] = useState({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   // Efeito para buscar análise do backend quando um modal é aberto
   useEffect(() => {
-    if (!selectedMatchModal) return;
+    if (!selectedMatchModal || !h2hData) return;
     const { match, odds } = selectedMatchModal;
     if (aiCache[match.id]) return; // Já temos em memória
     if (!match.t1.n || !match.t2.n) return; // Times não definidos
@@ -139,10 +141,11 @@ function App() {
         const t2 = match.t2.n;
         const o1 = odds.t1Odd || 2.5;
         const o2 = odds.t2Odd || 2.5;
+        const h2hSum = h2hData.summary || '';
 
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
         // Bate no nosso servidor Node.js (que fará a orquestração com PostgreSQL, Sportmonks e Gemini)
-        const res = await fetch(`${apiUrl}/api/analysis/${match.id}?t1=${encodeURIComponent(t1)}&t2=${encodeURIComponent(t2)}&t1Odd=${o1}&t2Odd=${o2}`);
+        const res = await fetch(`${apiUrl}/api/analysis/${match.id}?t1=${encodeURIComponent(t1)}&t2=${encodeURIComponent(t2)}&t1Odd=${o1}&t2Odd=${o2}&h2hSummary=${encodeURIComponent(h2hSum)}`);
         if (res.ok) {
           const data = await res.json();
           setAiCache(prev => ({ ...prev, [match.id]: data.text }));
@@ -153,7 +156,7 @@ function App() {
     };
 
     fetchAnalysisFromBackend();
-  }, [selectedMatchModal, aiCache]);
+  }, [selectedMatchModal, aiCache, h2hData]);
 
   const openTeamModal = async (teamName) => {
     setSelectedTeam({ loading: true, nome: teamName });
@@ -274,6 +277,37 @@ function App() {
        t1Odd: +calcT1Odd.toFixed(2),
        t2Odd: +calcT2Odd.toFixed(2)
     };
+  };
+
+  const openMatchModal = async (match, side, round) => {
+    if (!match.t1.n || !match.t2.n) return;
+    
+    const { t1Odd, t2Odd } = getMatchOdds(match.t1.n, match.t2.n);
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    
+    setSelectedMatchModal({ match, side, round, odds: { t1Odd, t2Odd } });
+    setMatchNotes('');
+    setH2hData(null);
+
+    try {
+      const h2hRes = await fetch(`${apiUrl}/api/h2h/${encodeURIComponent(match.t1.n)}/${encodeURIComponent(match.t2.n)}`);
+      if (h2hRes.ok) {
+        const hData = await h2hRes.json();
+        setH2hData(hData);
+        
+        if (hData && hData.total > 0) {
+          let h2hWeight = (hData.t1Wins - hData.t2Wins) * 0.15;
+          let newT1Odd = Math.max(1.10, t1Odd - h2hWeight);
+          let newT2Odd = Math.max(1.10, t2Odd + h2hWeight);
+          setSelectedMatchModal(prev => ({
+            ...prev,
+            odds: { t1Odd: +newT1Odd.toFixed(2), t2Odd: +newT2Odd.toFixed(2) }
+          }));
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao buscar H2H", e);
+    }
   };
 
   const updateMatch = (side, round, id, team, field, value) => {
@@ -539,7 +573,7 @@ function App() {
           <div 
             id={matches[i].id} 
             className={`match ${matches[i].status} clickable`}
-            onClick={() => setSelectedMatchModal({ match: matches[i], side, round: roundName, odds: getMatchOdds(matches[i].t1.n, matches[i].t2.n) })}
+            onClick={() => openMatchModal(matches[i], side, roundName)}
           >
             {renderTeam(matches[i].t1, side, roundName, matches[i], 't1')}
             {renderTeam(matches[i].t2, side, roundName, matches[i], 't2')}
@@ -549,7 +583,7 @@ function App() {
             <div 
               id={matches[i+1].id} 
               className={`match ${matches[i+1].status} clickable`}
-              onClick={() => setSelectedMatchModal({ match: matches[i+1], side, round: roundName, odds: getMatchOdds(matches[i+1].t1.n, matches[i+1].t2.n) })}
+              onClick={() => openMatchModal(matches[i+1], side, roundName)}
             >
               {renderTeam(matches[i+1].t1, side, roundName, matches[i+1], 't1')}
               {renderTeam(matches[i+1].t2, side, roundName, matches[i+1], 't2')}
@@ -685,6 +719,13 @@ function App() {
                 {renderStatBar(match.t1.n, match.t2.n, 'Defesa', 'defense')}
                 {renderStatBar(match.t1.n, match.t2.n, 'Retrospecto', 'form')}
               </div>
+
+              {h2hData && h2hData.summary && (
+                <div className="h2h-summary-box">
+                  <span className="h2h-icon">⚔️</span>
+                  <span className="h2h-text"><strong>Retrospecto H2H:</strong> {h2hData.summary}</span>
+                </div>
+              )}
               
               {renderMatchAnalysis(match, odds)}
             </div>
