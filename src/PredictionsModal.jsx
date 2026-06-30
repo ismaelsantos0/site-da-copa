@@ -9,7 +9,12 @@ const PredictionsModal = ({ onClose }) => {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/api/real-matches`);
       const data = await res.json();
-      setMatches(data);
+      if (Array.isArray(data)) {
+        setMatches(data);
+      } else {
+        console.error('API Error:', data);
+        setMatches([]);
+      }
     } catch (error) {
       console.error('Erro ao buscar partidas reais:', error);
     } finally {

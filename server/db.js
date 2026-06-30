@@ -14,8 +14,7 @@ const pool = new Pool({
        : false
 });
 
-// Inicializa as tabelas
-const initDB = async () => {
+export const initDB = async () => {
   try {
     // Cache de Análises de Confrontos
     await pool.query(`
@@ -78,8 +77,7 @@ const initDB = async () => {
   }
 };
 
-// Executa a inicialização
-initDB();
+// Removemos a chamada automática solta
 
 // --- Funções da Tabela match_analysis_cache ---
 export const getCachedAnalysis = async (matchId) => {

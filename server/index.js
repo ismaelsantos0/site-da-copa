@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import { getCachedAnalysis, saveAnalysisToCache, getTeamInfo } from './db.js';
+import { getCachedAnalysis, saveAnalysisToCache, getTeamInfo, initDB } from './db.js';
+import pool from './db.js';
 import { seedDatabase } from './seed.js';
 import { syncSportmonksStats } from './syncSportmonks.js';
 import { startCronJobs } from './cronJobs.js';
@@ -366,11 +367,14 @@ app.get('/api/admin/sync-stats', async (req, res) => {
 });
 
 app.listen(PORT, async () => {
-  console.log(`🚀 Servidor da Copa 2026 rodando na porta ${PORT}`);
+  console.log(`🏆 Servidor da Copa 2026 rodando na porta ${PORT}`);
   
-  // Seed initial data se necessário
-  await seedDatabase();
+  // 1. Inicializa as tabelas do banco de dados e aguarda terminar
+  await initDB();
 
-  // Inicia os relógios (Cron Jobs) para automatizar escalações futuras e sincronização diária
+  // 2. Faz o Seed dos dados (mock de partidas, elencos, etc)
+  await seedDatabase();
+  
+  // 3. Inicia os CRON Jobs de atualização real da Sportmonks
   startCronJobs();
 });
