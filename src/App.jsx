@@ -421,8 +421,8 @@ function App() {
             className={`match ${matches[i].status} clickable`}
             onClick={() => setSelectedMatchModal({ match: matches[i], side, round: roundName, odds: getMatchOdds(matches[i].t1.n, matches[i].t2.n) })}
           >
-            {renderTeam(matches[i].t1, matches[i].t2, matches[i], side, roundName, true)}
-            {renderTeam(matches[i].t2, matches[i].t1, matches[i], side, roundName, false)}
+            {renderTeam(matches[i].t1, side, roundName, matches[i], 't1')}
+            {renderTeam(matches[i].t2, side, roundName, matches[i], 't2')}
             
             {matches[i].status !== 'completed' && (
               <div 
@@ -440,8 +440,8 @@ function App() {
             className={`match ${matches[i+1].status} clickable`}
             onClick={() => setSelectedMatchModal({ match: matches[i+1], side, round: roundName, odds: getMatchOdds(matches[i+1].t1.n, matches[i+1].t2.n) })}
           >
-            {renderTeam(matches[i+1].t1, matches[i+1].t2, matches[i+1], side, roundName, true)}
-            {renderTeam(matches[i+1].t2, matches[i+1].t1, matches[i+1], side, roundName, false)}
+            {renderTeam(matches[i+1].t1, side, roundName, matches[i+1], 't1')}
+            {renderTeam(matches[i+1].t2, side, roundName, matches[i+1], 't2')}
             
             {matches[i+1].status !== 'completed' && (
               <div 
@@ -576,11 +576,24 @@ function App() {
                 </div>
               </div>
               <div className="final-match-container">
-                <div className="match final-match" id={data.final.id}>
-                   <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus('final', null, data.final.id); }}>↺</button>
-                   <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyMagicPrediction(data.final, 'final', null); }} title="Mágica: Prever Vencedor">🪄</button>
+                <div 
+                  className={`match final-match ${data.final.status} clickable`} 
+                  id={data.final.id}
+                  onClick={() => setSelectedMatchModal({ match: data.final, side: 'final', round: null, odds: getMatchOdds(data.final.t1.n, data.final.t2.n) })}
+                >
+                   <div className="final-label">⚽ GRANDE FINAL</div>
                   {renderTeam(data.final.t1, 'final', null, data.final, 't1')}
                   {renderTeam(data.final.t2, 'final', null, data.final, 't2')}
+                  
+                  {data.final.status !== 'completed' && (
+                    <div 
+                      className="magic-wand final-wand" 
+                      onClick={(e) => { e.stopPropagation(); applyMagicPrediction(data.final, 'final', null); }} 
+                      title="Prever vencedor da Copa"
+                    >
+                      🪄
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
