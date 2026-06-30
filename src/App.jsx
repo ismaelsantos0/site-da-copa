@@ -81,6 +81,10 @@ const connectionsDef = [
 function App() {
   const [data, setData] = useState(initialMatches);
   const [lines, setLines] = useState([]);
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [oddsData, setOddsData] = useState(null);
+  const [oddsLoading, setOddsLoading] = useState(false);
+  const [oddsError, setOddsError] = useState(null);
   const containerRef = useRef(null);
 
   const updateMatch = (side, round, id, team, field, value) => {
@@ -180,13 +184,15 @@ function App() {
       connectors.push(
         <div key={i} className="match-connector">
           <div className={`match ${matches[i].status}`} id={matches[i].id}>
-            <button className="status-toggle" onClick={() => toggleStatus(side, roundName, matches[i].id)}>↺</button>
+            <button className="action-btn btn-status" onClick={() => toggleStatus(side, roundName, matches[i].id)} title="Alternar Status">↺</button>
+            <button className="action-btn btn-stats" onClick={() => openOddsModal(matches[i])} title="Ver Odds">📊</button>
             {renderTeam(matches[i].t1, side, roundName, matches[i].id, 't1')}
             {renderTeam(matches[i].t2, side, roundName, matches[i].id, 't2')}
           </div>
           {matches[i+1] && (
             <div className={`match ${matches[i+1].status}`} id={matches[i+1].id}>
-              <button className="status-toggle" onClick={() => toggleStatus(side, roundName, matches[i+1].id)}>↺</button>
+              <button className="action-btn btn-status" onClick={() => toggleStatus(side, roundName, matches[i+1].id)} title="Alternar Status">↺</button>
+              <button className="action-btn btn-stats" onClick={() => openOddsModal(matches[i+1])} title="Ver Odds">📊</button>
               {renderTeam(matches[i+1].t1, side, roundName, matches[i+1].id, 't1')}
               {renderTeam(matches[i+1].t2, side, roundName, matches[i+1].id, 't2')}
             </div>
@@ -195,6 +201,41 @@ function App() {
       );
     }
     return connectors;
+  };
+
+  const renderModal = () => {
+    if (!selectedMatch) return null;
+    return (
+      <div className="modal-overlay" onClick={closeModal}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <button className="modal-close" onClick={closeModal}>&times;</button>
+          <div className="modal-header">
+            <h2>{selectedMatch.t1.f} {selectedMatch.t1.n} x {selectedMatch.t2.n} {selectedMatch.t2.f}</h2>
+            <p>The Odds API - Moneyline (H2H)</p>
+          </div>
+          
+          {oddsLoading && <div className="loading-skeleton">Buscando odds ao vivo... 📡</div>}
+          {oddsError && <div className="error-message">{oddsError}</div>}
+          
+          {oddsData && (
+            <div className="odds-container">
+              <div className="odd-box">
+                <h4>{oddsData.home?.name || 'Casa'}</h4>
+                <div className="odd-value">{oddsData.home?.price?.toFixed(2) || '-'}</div>
+              </div>
+              <div className="odd-box">
+                <h4>Empate</h4>
+                <div className="odd-value">{oddsData.draw?.price?.toFixed(2) || '-'}</div>
+              </div>
+              <div className="odd-box">
+                <h4>{oddsData.away?.name || 'Fora'}</h4>
+                <div className="odd-value">{oddsData.away?.price?.toFixed(2) || '-'}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -243,7 +284,8 @@ function App() {
               </div>
               <div className="final-match-container">
                 <div className="match final-match" id={data.final.id}>
-                   <button className="status-toggle" onClick={() => toggleStatus('final', null, data.final.id)}>↺</button>
+                   <button className="action-btn btn-status" onClick={() => toggleStatus('final', null, data.final.id)}>↺</button>
+                   <button className="action-btn btn-stats" onClick={() => openOddsModal(data.final)}>📊</button>
                   {renderTeam(data.final.t1, 'final', null, data.final.id, 't1')}
                   {renderTeam(data.final.t2, 'final', null, data.final.id, 't2')}
                 </div>
@@ -259,6 +301,8 @@ function App() {
           </div>
         </TransformComponent>
       </TransformWrapper>
+      
+      {renderModal()}
     </>
   );
 }
