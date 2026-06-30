@@ -123,8 +123,8 @@ const teamsData = [
   }
 ];
 
-const seedDatabase = async () => {
-  console.log('🌱 Iniciando o Seed do Banco de Dados com Dados Táticos...');
+export const seedDatabase = async () => {
+  console.log('🌱 Iniciando o Seed Automático do Banco de Dados com Dados Táticos...');
   let count = 0;
   for (const team of teamsData) {
     try {
@@ -135,10 +135,5 @@ const seedDatabase = async () => {
       console.error(`❌ Erro ao salvar ${team.name}:`, err.message);
     }
   }
-  console.log(`🎉 Seed concluído! ${count} seleções cadastradas.`);
-  
-  // Encerra a conexão com o banco para o script poder finalizar
-  await pool.end();
+  console.log(`🎉 Seed Automático concluído! ${count} seleções cadastradas.`);
 };
-
-seedDatabase();

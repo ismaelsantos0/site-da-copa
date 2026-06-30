@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { getCachedAnalysis, saveAnalysisToCache, getTeamInfo } from './db.js';
+import { seedDatabase } from './seed.js';
 
 dotenv.config();
 
@@ -130,6 +131,9 @@ app.get('/api/analysis/:matchId', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Servidor da Copa 2026 rodando na porta ${PORT}`);
+  
+  // Roda o seed automaticamente no boot do servidor
+  await seedDatabase();
 });
