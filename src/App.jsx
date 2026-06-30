@@ -505,7 +505,17 @@ function App() {
     return (
       <div className={`team ${t.w ? 'winner' : ''}`}>
         {info.iso ? (
-          <img src={`https://flagcdn.com/w40/${info.iso}.png`} alt={t.n} className="team-flag-img cursor-pointer" onClick={(e) => { e.stopPropagation(); openTeamModal(t.n); }} />
+          <img 
+            src={`https://flagcdn.com/w40/${info.iso}.png`} 
+            alt={t.n} 
+            className="team-flag-img cursor-pointer" 
+            draggable={false}
+            onClick={(e) => { 
+              e.preventDefault();
+              e.stopPropagation(); 
+              openTeamModal(t.n); 
+            }} 
+          />
         ) : (
           <div className="team-flag-placeholder"></div>
         )}

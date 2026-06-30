@@ -185,3 +185,15 @@ body {
   color: #60a5fa;
 }
 
+
+.team-flag-img {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  transition: transform 0.2s;
+}
+.team-flag-img:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
