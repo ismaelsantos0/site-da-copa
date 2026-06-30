@@ -188,6 +188,8 @@ function App() {
     const drawLines = () => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
+      const scale = rect.width / containerRef.current.offsetWidth || 1;
+
       const newLines = connectionsDef.map(conn => {
         const elFrom = document.getElementById(conn.from);
         const elTo = document.getElementById(conn.to);
@@ -196,16 +198,16 @@ function App() {
         const r1 = elFrom.getBoundingClientRect();
         const r2 = elTo.getBoundingClientRect();
         
-        const startY = r1.top - rect.top + r1.height / 2;
-        const endY = r2.top - rect.top + r2.height / 2;
+        const startY = (r1.top - rect.top + r1.height / 2) / scale;
+        const endY = (r2.top - rect.top + r2.height / 2) / scale;
         let startX, endX;
         
         if (conn.isLeft) {
-            startX = r1.right - rect.left;
-            endX = r2.left - rect.left;
+            startX = (r1.right - rect.left) / scale;
+            endX = (r2.left - rect.left) / scale;
         } else {
-            startX = r1.left - rect.left;
-            endX = r2.right - rect.left;
+            startX = (r1.left - rect.left) / scale;
+            endX = (r2.right - rect.left) / scale;
         }
         
         const midX = (startX + endX) / 2;
@@ -220,7 +222,7 @@ function App() {
     setTimeout(drawLines, 100);
     window.addEventListener('resize', drawLines);
     return () => window.removeEventListener('resize', drawLines);
-  }, [data]);
+  }, [data, allOdds]);
 
   const renderTeam = (t, side, round, matchObj, teamKey) => {
     const { t1Odd, t2Odd } = getMatchOdds(matchObj.t1.n, matchObj.t2.n);
