@@ -168,10 +168,10 @@ function App() {
           setTeamDataCache(prev => ({ ...prev, [teamName]: tData }));
           setSelectedTeam(tData);
         } else {
-          setSelectedTeam({ error: 'Ficha da seleção não encontrada.', nome: teamName });
+          setSelectedTeam({ error: `Ficha não encontrada (Status: ${res.status}).`, nome: teamName });
         }
       } catch (err) {
-        setSelectedTeam({ error: 'Erro de conexão com a nuvem.', nome: teamName });
+        setSelectedTeam({ error: `Erro: ${err.name} - ${err.message}`, nome: teamName });
       }
     }
   };
