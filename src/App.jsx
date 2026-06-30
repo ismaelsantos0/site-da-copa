@@ -505,17 +505,23 @@ function App() {
     return (
       <div className={`team ${t.w ? 'winner' : ''}`}>
         {info.iso ? (
-          <img 
-            src={`https://flagcdn.com/w40/${info.iso}.png`} 
-            alt={t.n} 
-            className="team-flag-img cursor-pointer" 
-            draggable={false}
+          <div 
+            className="flag-button"
             onClick={(e) => { 
               e.preventDefault();
               e.stopPropagation(); 
               openTeamModal(t.n); 
-            }} 
-          />
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{ display: 'inline-block', cursor: 'pointer', zIndex: 50, position: 'relative' }}
+          >
+            <img 
+              src={`https://flagcdn.com/w40/${info.iso}.png`} 
+              alt={t.n} 
+              className="team-flag-img" 
+              draggable={false}
+            />
+          </div>
         ) : (
           <div className="team-flag-placeholder"></div>
         )}
@@ -761,7 +767,18 @@ function App() {
                 <div className="champ-team">
                   {data.final.champ.n ? (
                     <>
-                      <img src={`https://flagcdn.com/w80/${teamInfo[data.final.champ.n]?.iso || ''}.png`} className="champ-flag-img" alt={data.final.champ.n} onError={(e) => e.target.style.display='none'} />
+                      <div 
+                        className="flag-button"
+                        onClick={(e) => { 
+                          e.preventDefault();
+                          e.stopPropagation(); 
+                          openTeamModal(data.final.champ.n); 
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        style={{ display: 'inline-block', cursor: 'pointer', zIndex: 50, position: 'relative' }}
+                      >
+                        <img src={`https://flagcdn.com/w80/${teamInfo[data.final.champ.n]?.iso || ''}.png`} className="champ-flag-img" alt={data.final.champ.n} onError={(e) => e.target.style.display='none'} draggable={false} />
+                      </div>
                       <span className="champ-name-text">{data.final.champ.n}</span>
                     </>
                   ) : (
