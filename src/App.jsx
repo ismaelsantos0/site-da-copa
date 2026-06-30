@@ -16,17 +16,17 @@ const initialMatches = {
       { id: 'm8', status: 'confirmed', t1: { f: '🇦🇺', n: 'Austrália', s: '', w: false }, t2: { f: '🇪🇬', n: 'Egito', s: '', w: false } }
     ],
     round2: [
-      { id: 'm17', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm18', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm19', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm20', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
+      { id: 'm17', status: 'prediction', t1: { f: '🇧🇷', n: 'Brasil', s: '2', w: true }, t2: { f: '🇳🇴', n: 'Noruega', s: '1', w: false } },
+      { id: 'm18', status: 'prediction', t1: { f: '🇪🇸', n: 'Espanha', s: '2', w: true }, t2: { f: '🇨🇭', n: 'Suíça', s: '0', w: false } },
+      { id: 'm19', status: 'prediction', t1: { f: '🇦🇷', n: 'Argentina', s: '3', w: true }, t2: { f: '🇲🇽', n: 'México', s: '1', w: false } },
+      { id: 'm20', status: 'prediction', t1: { f: '🇳🇱', n: 'Holanda', s: '1', w: true }, t2: { f: '🇦🇺', n: 'Austrália', s: '0', w: false } }
     ],
     round3: [
-      { id: 'm25', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm26', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
+      { id: 'm25', status: 'prediction', t1: { f: '🇧🇷', n: 'Brasil', s: '0', w: false }, t2: { f: '🇪🇸', n: 'Espanha', s: '1', w: true } },
+      { id: 'm26', status: 'prediction', t1: { f: '🇦🇷', n: 'Argentina', s: '2', w: true }, t2: { f: '🇳🇱', n: 'Holanda', s: '1', w: false } }
     ],
     round4: [
-      { id: 'm29', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
+      { id: 'm29', status: 'prediction', t1: { f: '🇪🇸', n: 'Espanha', s: '0', w: false }, t2: { f: '🇦🇷', n: 'Argentina', s: '1', w: true } }
     ]
   },
   right: {
@@ -41,22 +41,22 @@ const initialMatches = {
       { id: 'm16', status: 'confirmed', t1: { f: '🇧🇪', n: 'Bélgica', s: '', w: false }, t2: { f: '🇸🇳', n: 'Senegal', s: '', w: false } }
     ],
     round2: [
-      { id: 'm21', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm22', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm23', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm24', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
+      { id: 'm21', status: 'prediction', t1: { f: '🇫🇷', n: 'França', s: '3', w: true }, t2: { f: '🇨🇦', n: 'Canadá', s: '0', w: false } },
+      { id: 'm22', status: 'prediction', t1: { f: '🇨🇴', n: 'Colômbia', s: '1(5)', w: true }, t2: { f: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', n: 'Inglaterra', s: '1(4)', w: false } },
+      { id: 'm23', status: 'prediction', t1: { f: '🇵🇾', n: 'Paraguai', s: '1', w: false }, t2: { f: '🇺🇸', n: 'Estados Unidos', s: '2', w: true } },
+      { id: 'm24', status: 'prediction', t1: { f: '🇵🇹', n: 'Portugal', s: '1', w: true }, t2: { f: '🇧🇪', n: 'Bélgica', s: '0', w: false } }
     ],
     round3: [
-      { id: 'm27', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
-      { id: 'm28', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
+      { id: 'm27', status: 'prediction', t1: { f: '🇫🇷', n: 'França', s: '2', w: true }, t2: { f: '🇨🇴', n: 'Colômbia', s: '0', w: false } },
+      { id: 'm28', status: 'prediction', t1: { f: '🇺🇸', n: 'Estados Unidos', s: '1', w: false }, t2: { f: '🇵🇹', n: 'Portugal', s: '2', w: true } }
     ],
     round4: [
-      { id: 'm30', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
+      { id: 'm30', status: 'prediction', t1: { f: '🇫🇷', n: 'França', s: '2', w: true }, t2: { f: '🇵🇹', n: 'Portugal', s: '1', w: false } }
     ]
   },
   final: {
-    id: 'm31', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false },
-    champ: { f: '', n: '' }
+    id: 'm31', status: 'prediction', t1: { f: '🇦🇷', n: 'Argentina', s: '2', w: false }, t2: { f: '🇫🇷', n: 'França', s: '3', w: true },
+    champ: { f: '🇫🇷', n: 'França' }
   }
 };
 
