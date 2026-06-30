@@ -37,6 +37,22 @@ const PredictionsModal = ({ onClose }) => {
     }
   };
 
+  const simulateRealMatch = async (matchId, t1Goals, t2Goals) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${apiUrl}/api/admin/simulate-result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_id: matchId, real_score_t1: parseInt(t1Goals), real_score_t2: parseInt(t2Goals) })
+      });
+      if (res.ok) {
+        fetchMatches(); // Recarrega os dados com os selos de Acerto/Erro
+      }
+    } catch (e) {
+      console.error('Erro ao simular resultado:', e);
+    }
+  };
+
   const renderStatus = (match) => {
     if (match.status === 'CONFIRMED') {
       if (match.pred_status === 'PENDING') return <span className="pred-status pending">Pendente</span>;
@@ -100,16 +116,29 @@ const PredictionsModal = ({ onClose }) => {
                   </div>
 
                   {m.status === 'CONFIRMED' && (
-                    <button 
-                      className="save-pred-btn"
-                      onClick={() => {
-                        const t1G = document.getElementById(`pred_t1_${m.id}`).value;
-                        const t2G = document.getElementById(`pred_t2_${m.id}`).value;
-                        if(t1G !== '' && t2G !== '') handlePredict(m.id, t1G, t2G);
-                      }}
-                    >
-                      Salvar Palpite
-                    </button>
+                    <div className="btn-group">
+                      <button 
+                        className="save-pred-btn"
+                        onClick={() => {
+                          const t1G = document.getElementById(`pred_t1_${m.id}`).value;
+                          const t2G = document.getElementById(`pred_t2_${m.id}`).value;
+                          if(t1G !== '' && t2G !== '') handlePredict(m.id, t1G, t2G);
+                        }}
+                      >
+                        Salvar Palpite
+                      </button>
+                      <button 
+                        className="simulate-end-btn"
+                        style={{marginTop: '10px', background: '#dc2626', color: 'white', padding: '10px', borderRadius: '5px', width: '100%', cursor: 'pointer', border: 'none', fontWeight: 'bold'}}
+                        onClick={() => {
+                          const t1G = document.getElementById(`pred_t1_${m.id}`).value || 0;
+                          const t2G = document.getElementById(`pred_t2_${m.id}`).value || 0;
+                          simulateRealMatch(m.id, t1G, t2G);
+                        }}
+                      >
+                        🚨 [Admin] Encerrar Jogo (Placar Acima)
+                      </button>
+                    </div>
                   )}
 
                   {m.status === 'FINISHED' && m.pred_t1 !== null && (
