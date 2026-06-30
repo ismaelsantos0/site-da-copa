@@ -430,3 +430,21 @@
   font-size: 0.75rem;
 }
 
+
+.btn-predict-all {
+  background: linear-gradient(135deg, var(--primary) 0%, #00b377 100%);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin: 0 20px;
+}
+.btn-predict-all:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 255, 170, 0.3);
+}
+

@@ -229,6 +229,53 @@ function App() {
     });
   };
 
+  const simulateAll = () => {
+    setData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      
+      const processMatch = (targetObj) => {
+        if (targetObj.status === 'completed') return;
+        if (!targetObj.t1.n || !targetObj.t2.n) return;
+        
+        const { t1Odd, t2Odd } = getMatchOdds(targetObj.t1.n, targetObj.t2.n);
+        if (!t1Odd || !t2Odd || t1Odd === t2Odd) return;
+
+        const isT1Fav = t1Odd < t2Odd;
+        const favOdd = isT1Fav ? t1Odd : t2Odd;
+        const underdogOdd = isT1Fav ? t2Odd : t1Odd;
+        const diff = underdogOdd - favOdd;
+        
+        let favGoals, underGoals;
+        
+        if (diff > 5.0) { favGoals = '4'; underGoals = '0'; }
+        else if (diff > 2.5) { favGoals = '3'; underGoals = '0'; }
+        else if (diff > 1.2) { favGoals = '2'; underGoals = '0'; }
+        else if (diff > 0.5) { favGoals = '2'; underGoals = '1'; }
+        else {
+          const favPens = 4 + (targetObj.t1.n.length % 2);
+          const underPens = favPens - 1;
+          favGoals = `1(${favPens})`; underGoals = `1(${underPens})`;
+        }
+        
+        targetObj.t1.s = isT1Fav ? favGoals : underGoals;
+        targetObj.t1.w = isT1Fav;
+        targetObj.t2.s = isT1Fav ? underGoals : favGoals;
+        targetObj.t2.w = !isT1Fav;
+      };
+
+      Object.keys(newData.left).forEach(round => newData.left[round].forEach(processMatch));
+      Object.keys(newData.right).forEach(round => newData.right[round].forEach(processMatch));
+      processMatch(newData.final);
+      
+      if (newData.final.t1.w !== undefined) {
+        if (newData.final.t1.w) newData.final.champ = { f: newData.final.t1.f, n: newData.final.t1.n };
+        else if (newData.final.t2.w) newData.final.champ = { f: newData.final.t2.f, n: newData.final.t2.n };
+      }
+      
+      return newData;
+    });
+  };
+
   useEffect(() => {
     const drawLines = () => {
       if (!containerRef.current) return;
@@ -328,6 +375,7 @@ function App() {
       
       <div className="app-header">
         <h1>🏆 Copa do Mundo 2026</h1>
+        <button className="btn-predict-all" onClick={simulateAll}>🪄 Simular Tudo</button>
         <div className="legend">
           <div className="legend-item"><div className="legend-color completed"></div> Realizado</div>
           <div className="legend-item"><div className="legend-color prediction"></div> Palpite</div>
