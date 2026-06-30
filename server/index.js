@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import { getCachedAnalysis, saveAnalysisToCache } from './db.js';
+import { getCachedAnalysis, saveAnalysisToCache, getTeamInfo } from './db.js';
 
 dotenv.config();
 
@@ -22,66 +22,67 @@ app.get('/api/analysis/:matchId', async (req, res) => {
   }
 
   try {
-    // 1. Verifica o Cache no Banco de Dados
+    // 1. Verifica o Cache de Partida no Banco de Dados
     console.log(`[🔍] Buscando cache para o jogo: ${t1} vs ${t2}...`);
     const cachedData = await getCachedAnalysis(matchId);
     
     if (cachedData) {
-      console.log(`[✅] Cache encontrado! Retornando análise em 0ms.`);
+      console.log(`[✅] Cache de partida encontrado! Retornando análise em 0ms.`);
       return res.json({ source: 'cache', text: cachedData });
     }
 
-    console.log(`[⏳] Cache vazio. Iniciando Orquestração de Inteligência...`);
+    console.log(`[⏳] Cache vazio. Iniciando Orquestração Híbrida...`);
 
-    // 2. Busca Dados Reais na Sportmonks
-    let sportmonksContext = "";
+    // 2. Busca Dados Básicos Fixos (SQLite - teams_info)
+    const team1Data = await getTeamInfo(t1);
+    const team2Data = await getTeamInfo(t2);
+
+    let tacticalContext = "";
+    if (team1Data && team2Data) {
+       tacticalContext = `
+       === DADOS TÁTICOS BASE (${t1}) ===
+       - Escalação Base: ${team1Data.tactical_data.starters.join(', ')}
+       - Estratégia: ${team1Data.tactical_data.strategy}
+       - Destaque: ${team1Data.tactical_data.keyPlayer}
+       - Fraqueza: ${team1Data.tactical_data.weakness}
+       - Notas (0-10): Ataque ${team1Data.tactical_data.ratings.attack} | Defesa ${team1Data.tactical_data.ratings.defense} | Meio ${team1Data.tactical_data.ratings.midfield}
+
+       === DADOS TÁTICOS BASE (${t2}) ===
+       - Escalação Base: ${team2Data.tactical_data.starters.join(', ')}
+       - Estratégia: ${team2Data.tactical_data.strategy}
+       - Destaque: ${team2Data.tactical_data.keyPlayer}
+       - Fraqueza: ${team2Data.tactical_data.weakness}
+       - Notas (0-10): Ataque ${team2Data.tactical_data.ratings.attack} | Defesa ${team2Data.tactical_data.ratings.defense} | Meio ${team2Data.tactical_data.ratings.midfield}
+       `;
+    } else {
+       tacticalContext = `[Aviso: Dados táticos base ausentes no DB. Use conhecimento geral para ${t1} e ${t2}.]`;
+    }
+
+    // 3. Busca Atualizações em Tempo Real na Sportmonks (Desfalques/Lineups)
+    let liveUpdates = "";
     const smToken = process.env.SPORTMONKS_API_TOKEN;
-    if (smToken) {
-      console.log(`[⚽] Buscando IDs na Sportmonks para ${t1} e ${t2}...`);
+    if (smToken && team1Data?.sportmonks_id && team2Data?.sportmonks_id) {
       try {
-        const resT1 = await axios.get(`https://api.sportmonks.com/v3/football/teams/search/${t1}?api_token=${smToken}`);
-        const idT1 = resT1.data?.data?.[0]?.id;
-        
-        const resT2 = await axios.get(`https://api.sportmonks.com/v3/football/teams/search/${t2}?api_token=${smToken}`);
-        const idT2 = resT2.data?.data?.[0]?.id;
-
-        if (idT1 && idT2) {
-          console.log(`[⚽] Buscando H2H Fixture para os IDs ${idT1} e ${idT2}...`);
-          const resH2H = await axios.get(`https://api.sportmonks.com/v3/football/fixtures/head-to-head/${idT1}/${idT2}?api_token=${smToken}&include=lineups.player,sidelined.player`);
+          console.log(`[⚽] Buscando H2H Fixture para atualizações ao vivo...`);
+          const resH2H = await axios.get(`https://api.sportmonks.com/v3/football/fixtures/head-to-head/${team1Data.sportmonks_id}/${team2Data.sportmonks_id}?api_token=${smToken}&include=lineups.player,sidelined.player`);
           
           const fixtures = resH2H.data?.data || [];
           if (fixtures.length > 0) {
             const latestFixture = fixtures[0]; // Pega o último confronto
-            
-            // Extrai Escalações
-            let lineups = [];
-            if (latestFixture.lineups) {
-              lineups = latestFixture.lineups.map(l => l.player?.name || l.player_id).filter(Boolean);
-            }
-            
-            // Extrai Desfalques
             let sidelined = [];
             if (latestFixture.sidelined) {
               sidelined = latestFixture.sidelined.map(s => s.player?.name || s.player_id).filter(Boolean);
             }
-
-            sportmonksContext = `DADOS REAIS DA PARTIDA (SPORTMONKS API):
-            - Jogadores relacionados/escalados encontrados: ${lineups.length > 0 ? lineups.slice(0, 22).join(', ') : 'Escalação oficial ainda não liberada.'}
-            - Desfalques/Lesões Oficiais Confirmadas para este jogo: ${sidelined.length > 0 ? sidelined.join(', ') : 'Nenhum desfalque importante reportado no momento.'}
-            
-            (Analise o jogo focando estritamente nestes desfalques e elencos caso estejam disponíveis, caso contrário, use sua base histórica de conhecimento sobre as equipes principais).`;
-          } else {
-             sportmonksContext = `Dados Reais: Não foi encontrado um Head-to-Head oficial ao vivo hoje. Preveja usando a força máxima esperada de cada seleção na Copa.`;
+            liveUpdates = `DADOS AO VIVO (SPORTMONKS): Desfalques confirmados hoje: ${sidelined.length > 0 ? sidelined.join(', ') : 'Nenhum'}.`;
           }
-        }
       } catch (smError) {
-        console.error(`[⚠️] Erro na Sportmonks:`, smError.response?.data || smError.message);
-        sportmonksContext = `Aviso: Conexão com os dados ao vivo oscilou. Faça uma previsão tática clássica baseada no elenco principal.`;
+          console.error(`[⚠️] Erro na Sportmonks:`, smError.message);
+          liveUpdates = `Aviso: API de tempo real falhou.`;
       }
     }
 
-    // 3. Monta o Prompt Super Completo
-    const systemPrompt = process.env.VITE_GEMINI_PROMPT || `Você é um analista tático esportivo especialista na Copa do Mundo 2026. Analise o histórico de estratégia desses dois times, quais foram os jogadores chaves, e quais os ataques mais usados, histórico de jogadores lesionados ou com cartão, qual a atual escalação. Compare com as odds de vitória ou empate e faça uma previsão levando todos esses fatores em questão. Cada ponto importante no futebol deve ser levado em consideração.`;
+    // 4. Monta o Prompt Super Completo
+    const systemPrompt = process.env.VITE_GEMINI_PROMPT || `Você é um analista tático esportivo especialista na Copa do Mundo 2026. Analise o confronto cruzando as odds com os dados táticos que recebi do meu banco de dados (estratégia, notas, fraquezas) e as atualizações ao vivo. Responda em parágrafos diretos e convincentes.`;
     
     const finalPrompt = `
       ${systemPrompt}
@@ -90,10 +91,11 @@ app.get('/api/analysis/:matchId', async (req, res) => {
       Odd Vitória ${t1}: ${t1Odd}
       Odd Vitória ${t2}: ${t2Odd}
 
-      ${sportmonksContext}
+      ${tacticalContext}
+      ${liveUpdates}
     `;
 
-    // 4. Chama a IA do Google Gemini
+    // 5. Chama a IA do Google Gemini
     console.log(`[🤖] Processando análise na IA do Google Gemini...`);
     const apiKey = process.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
@@ -114,11 +116,11 @@ app.get('/api/analysis/:matchId', async (req, res) => {
     // Formatação básica de Markdown para HTML
     generatedText = generatedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-    // 5. Salva no Banco de Dados para uso futuro
+    // 6. Salva no Banco de Dados para uso futuro
     console.log(`[💾] Salvando nova análise no banco de dados SQLite...`);
     await saveAnalysisToCache(matchId, t1, t2, generatedText);
 
-    // 6. Devolve pro Frontend
+    // 7. Devolve pro Frontend
     console.log(`[🚀] Análise enviada pro Frontend com sucesso!`);
     res.json({ source: 'ai_generated', text: generatedText });
 
