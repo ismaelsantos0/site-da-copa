@@ -28,8 +28,8 @@ export const syncSportmonksStats = async () => {
       console.log(`⏳ Buscando dados para: ${team.name} (ID: ${team.sportmonks_id})...`);
       
       try {
-        // Busca estatísticas do time.
-        const url = `https://api.sportmonks.com/v3/football/teams/${team.sportmonks_id}?include=statistics.details.type&api_token=${smToken}`;
+        // Busca estatísticas e elenco do time.
+        const url = `https://api.sportmonks.com/v3/football/teams/${team.sportmonks_id}?include=statistics.details.type,squad.player&api_token=${smToken}`;
         const response = await axios.get(url);
         
         const data = response.data?.data;
@@ -78,11 +78,53 @@ export const syncSportmonksStats = async () => {
         if (realStats.ball_possession === 0) realStats.ball_possession = Math.floor(Math.random() * 20) + 40;
         if (realStats.goals === 0) realStats.goals = Math.floor(Math.random() * 15) + 5;
 
-        console.log(`✅ Dados processados para ${team.name}:`, realStats);
+        // Processamento do Elenco Oficial (Squad)
+        // Divide os 11 primeiros como Titulares provisórios e o resto como Reservas
+        const titulares = [];
+        const reservas = [];
 
-        // Mescla as estatísticas reais dentro do JSON `tactical_data` existente
+        if (data.squad && Array.isArray(data.squad)) {
+          data.squad.forEach((squadEntry, index) => {
+            const player = squadEntry.player;
+            if (player) {
+              const playerName = player.display_name || player.name || player.common_name;
+              
+              // Tenta descobrir a posição base (Sportmonks costuma ter position_id: 24 GOL, 25 DEF, 26 MEI, 27 ATA)
+              let pos = 'JOG';
+              if (player.position_id === 24) pos = 'GOL';
+              else if (player.position_id === 25) pos = 'ZAG';
+              else if (player.position_id === 26) pos = 'MEI';
+              else if (player.position_id === 27) pos = 'ATA';
+
+              const playerObj = {
+                nome: playerName,
+                posicao: pos,
+                nota: (Math.random() * 2 + 7).toFixed(1), // Mock nota temporária
+                status: 'ok',
+                gols: 0,
+                cartoes_amarelos: 0,
+                cartoes_vermelhos: 0
+              };
+
+              if (titulares.length < 11) {
+                titulares.push(playerObj);
+              } else {
+                reservas.push(playerObj);
+              }
+            }
+          });
+        }
+
+        console.log(`✅ Dados e Elenco processados para ${team.name}:`, realStats, `(${titulares.length} titulares, ${reservas.length} reservas)`);
+
+        // Mescla as estatísticas reais e os novos elencos dentro do JSON `tactical_data` existente
         const tacticalData = typeof team.tactical_data === 'string' ? JSON.parse(team.tactical_data) : team.tactical_data;
         tacticalData.real_stats = realStats;
+        
+        if (titulares.length > 0) {
+          tacticalData.titulares = titulares;
+          tacticalData.reservas = reservas;
+        }
 
         await pool.query(
           'UPDATE teams_info SET tactical_data = $1, last_updated = CURRENT_TIMESTAMP WHERE name = $2',

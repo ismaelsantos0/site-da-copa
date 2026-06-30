@@ -5,6 +5,7 @@ import axios from 'axios';
 import { getCachedAnalysis, saveAnalysisToCache, getTeamInfo } from './db.js';
 import { seedDatabase } from './seed.js';
 import { syncSportmonksStats } from './syncSportmonks.js';
+import { startCronJobs } from './cronJobs.js';
 
 dotenv.config();
 
@@ -170,6 +171,9 @@ app.get('/api/admin/sync-stats', async (req, res) => {
 app.listen(PORT, async () => {
   console.log(`🚀 Servidor da Copa 2026 rodando na porta ${PORT}`);
   
-  // Roda o seed automaticamente no boot do servidor
+  // Seed initial data se necessário
   await seedDatabase();
+
+  // Inicia os relógios (Cron Jobs) para automatizar escalações futuras e sincronização diária
+  startCronJobs();
 });
