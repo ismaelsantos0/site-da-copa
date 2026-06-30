@@ -828,14 +828,14 @@ function App() {
                 <>
                   <div className="tactical-summary">
                     <h3>Modo Operanti</h3>
-                    <p>{selectedTeam.taticas.modo_operanti}</p>
-                    <p><strong>Destaque:</strong> {selectedTeam.taticas.jogador_chave}</p>
+                    <p>{selectedTeam.tactical_data.modo_operanti}</p>
+                    <p><strong>Destaque:</strong> {selectedTeam.tactical_data.jogador_chave}</p>
                   </div>
 
                   <div className="roster-section">
                     <h3>Titulares Oficiais</h3>
                     <div className="roster-list">
-                      {selectedTeam.taticas.titulares.map((p, i) => (
+                      {selectedTeam.tactical_data.titulares.map((p, i) => (
                         <div key={i} className="player-row titular-row">
                           <span className="player-pos">{p.posicao}</span>
                           <span className="player-name">{p.nome}</span>
@@ -854,7 +854,7 @@ function App() {
                   <div className="roster-section mt-4">
                     <h3>Banco de Reservas</h3>
                     <div className="roster-list">
-                      {selectedTeam.taticas.reservas.map((p, i) => (
+                      {selectedTeam.tactical_data.reservas.map((p, i) => (
                         <div key={i} className="player-row reserva-row">
                           <span className="player-pos">{p.posicao}</span>
                           <span className="player-name">{p.nome}</span>
