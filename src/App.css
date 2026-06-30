@@ -658,3 +658,17 @@
   letter-spacing: 1px;
 }
 
+
+.app-header {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 9999999 !important;
+  pointer-events: auto !important;
+}
+.simulation-overlay {
+  z-index: 9999999 !important;
+}
+
