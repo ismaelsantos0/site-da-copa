@@ -574,7 +574,13 @@ function App() {
     const info = teamInfo[t.n] || { fifa: t.n ? t.n.substring(0, 3).toUpperCase() : '', iso: '' };
 
     return (
-      <div className={`team ${t.w ? 'winner' : ''}`}>
+      <div 
+        className={`team ${t.w ? 'winner' : ''} ${!t.n ? 'empty' : ''}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (t.n) updateMatch(side, round, matchObj.id, teamKey, 'winner', true);
+        }}
+      >
         {info.iso ? (
           <div 
             className="flag-button"
