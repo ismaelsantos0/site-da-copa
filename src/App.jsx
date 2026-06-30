@@ -514,6 +514,58 @@ function App() {
     );
   };
 
+  const renderMatchAnalysis = (match, odds) => {
+    const t1 = match.t1;
+    const t2 = match.t2;
+    if (!t1.n || !t2.n) return null;
+
+    const s1 = teamStats[t1.n] || { attack: 75, defense: 75, tactic: 'balanced' };
+    const s2 = teamStats[t2.n] || { attack: 75, defense: 75, tactic: 'balanced' };
+    
+    const o1 = odds.t1Odd || 2.5;
+    const o2 = odds.t2Odd || 2.5;
+
+    let p1 = "";
+    if (Math.abs(o1 - o2) < 0.3) {
+      p1 = <span>Confronto extremamente equilibrado. As casas de apostas apontam um empate técnico.</span>;
+    } else if (o1 < o2) {
+      p1 = <span><strong>{t1.n}</strong> entra como favorita matemática (Odd {o1.toFixed(2)}).</span>;
+    } else {
+      p1 = <span><strong>{t2.n}</strong> entra como favorita matemática (Odd {o2.toFixed(2)}).</span>;
+    }
+
+    let p2 = "";
+    const t1Advantage = s1.attack - s2.defense;
+    const t2Advantage = s2.attack - s1.defense;
+    
+    if (t1Advantage > 5 && t2Advantage <= 5) {
+      p2 = <span>O poder ofensivo de <strong>{t1.n}</strong> deve superar o bloqueio defensivo de {t2.n}.</span>;
+    } else if (t2Advantage > 5 && t1Advantage <= 5) {
+      p2 = <span>O poder ofensivo de <strong>{t2.n}</strong> leva grande vantagem sobre a defesa de {t1.n}.</span>;
+    } else if (t1Advantage > 0 && t2Advantage > 0) {
+      p2 = <span>Promessa de jogo aberto! Ambos os ataques são estatisticamente superiores às defesas adversárias.</span>;
+    } else {
+      p2 = <span>O jogo tende a ser truncado, com as defesas prevalecendo sobre os ataques de ambos os lados.</span>;
+    }
+
+    let p3 = null;
+    if (match.t1.s !== '' && match.t2.s !== '') {
+       const winner = match.t1.w ? t1.n : (match.t2.w ? t2.n : 'Empate');
+       p3 = <div className="sim-result">🎯 <strong>Resultado Simulado:</strong> O encaixe tático resultou na vitória de <strong>{winner}</strong> por {match.t1.s} x {match.t2.s}.</div>;
+    } else {
+       const favored = o1 < o2 ? t1.n : t2.n;
+       p3 = <div className="sim-result">🔮 <strong>Projeção:</strong> O motor tático sugere vantagem para <strong>{favored}</strong>. Rode a simulação para descobrir o placar!</div>;
+    }
+
+    return (
+      <div className="match-analysis-box">
+        <h3>🧠 Análise de Inteligência</h3>
+        <p>{p1} {p2}</p>
+        {p3}
+      </div>
+    );
+  };
+
   const renderModal = () => {
     if (!selectedMatchModal) return null;
     const { match, side, round, odds } = selectedMatchModal;
@@ -550,6 +602,8 @@ function App() {
                 {renderStatBar(match.t1.n, match.t2.n, 'Defesa', 'defense')}
                 {renderStatBar(match.t1.n, match.t2.n, 'Retrospecto', 'form')}
               </div>
+              
+              {renderMatchAnalysis(match, odds)}
             </div>
           ) : (
             <div className="modal-tbd">
