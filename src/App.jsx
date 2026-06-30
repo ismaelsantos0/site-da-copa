@@ -137,8 +137,9 @@ function App() {
         const o1 = odds.t1Odd || 2.5;
         const o2 = odds.t2Odd || 2.5;
 
-        // Bate no nosso servidor Node.js (que fará a orquestração com SQLite, Sportmonks e Gemini)
-        const res = await fetch(`http://localhost:3001/api/analysis/${match.id}?t1=${encodeURIComponent(t1)}&t2=${encodeURIComponent(t2)}&t1Odd=${o1}&t2Odd=${o2}`);
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        // Bate no nosso servidor Node.js (que fará a orquestração com PostgreSQL, Sportmonks e Gemini)
+        const res = await fetch(`${apiUrl}/api/analysis/${match.id}?t1=${encodeURIComponent(t1)}&t2=${encodeURIComponent(t2)}&t1Odd=${o1}&t2Odd=${o2}`);
         if (res.ok) {
           const data = await res.json();
           setAiCache(prev => ({ ...prev, [match.id]: data.text }));
