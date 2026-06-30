@@ -44,6 +44,10 @@
   background: var(--completed-bg);
   border: 1px solid var(--completed-border);
 }
+.legend-color.confirmed {
+  background: var(--confirmed-bg);
+  border: 1px solid var(--confirmed-border);
+}
 .legend-color.prediction {
   background: var(--prediction-bg);
   border: 1px dashed var(--prediction-border);
@@ -106,6 +110,10 @@
 .match.completed {
   background: var(--completed-bg);
   border: 1px solid var(--completed-border);
+}
+.match.confirmed {
+  background: var(--confirmed-bg);
+  border: 1px solid var(--confirmed-border);
 }
 .match.prediction {
   background: var(--prediction-bg);

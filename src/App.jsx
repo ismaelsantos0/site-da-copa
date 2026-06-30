@@ -7,56 +7,56 @@ const initialMatches = {
   left: {
     round1: [
       { id: 'm1', status: 'completed', t1: { f: '🇧🇷', n: 'Brasil', s: '2', w: true }, t2: { f: '🇯🇵', n: 'Japão', s: '1', w: false } },
-      { id: 'm2', status: 'prediction', t1: { f: '🇨🇮', n: 'C. do Marfim', s: '', w: false }, t2: { f: '🇳🇴', n: 'Noruega', s: '', w: false } },
-      { id: 'm3', status: 'prediction', t1: { f: '🇪🇸', n: 'Espanha', s: '', w: false }, t2: { f: '🇦🇹', n: 'Áustria', s: '', w: false } },
-      { id: 'm4', status: 'prediction', t1: { f: '🇨🇭', n: 'Suíça', s: '', w: false }, t2: { f: '🇩🇿', n: 'Argélia', s: '', w: false } },
-      { id: 'm5', status: 'prediction', t1: { f: '🇦🇷', n: 'Argentina', s: '', w: false }, t2: { f: '🇨🇻', n: 'Cabo Verde', s: '', w: false } },
-      { id: 'm6', status: 'prediction', t1: { f: '🇲🇽', n: 'México', s: '', w: false }, t2: { f: '🇪🇨', n: 'Equador', s: '', w: false } },
-      { id: 'm7', status: 'prediction', t1: { f: '🇳🇱', n: 'Holanda', s: '', w: false }, t2: { f: '🇲🇦', n: 'Marrocos', s: '', w: false } },
-      { id: 'm8', status: 'prediction', t1: { f: '🇦🇺', n: 'Austrália', s: '', w: false }, t2: { f: '🇪🇬', n: 'Egito', s: '', w: false } }
+      { id: 'm2', status: 'confirmed', t1: { f: '🇨🇮', n: 'C. do Marfim', s: '', w: false }, t2: { f: '🇳🇴', n: 'Noruega', s: '', w: false } },
+      { id: 'm3', status: 'confirmed', t1: { f: '🇪🇸', n: 'Espanha', s: '', w: false }, t2: { f: '🇦🇹', n: 'Áustria', s: '', w: false } },
+      { id: 'm4', status: 'confirmed', t1: { f: '🇨🇭', n: 'Suíça', s: '', w: false }, t2: { f: '🇩🇿', n: 'Argélia', s: '', w: false } },
+      { id: 'm5', status: 'confirmed', t1: { f: '🇦🇷', n: 'Argentina', s: '', w: false }, t2: { f: '🇨🇻', n: 'Cabo Verde', s: '', w: false } },
+      { id: 'm6', status: 'confirmed', t1: { f: '🇲🇽', n: 'México', s: '', w: false }, t2: { f: '🇪🇨', n: 'Equador', s: '', w: false } },
+      { id: 'm7', status: 'confirmed', t1: { f: '🇳🇱', n: 'Holanda', s: '', w: false }, t2: { f: '🇲🇦', n: 'Marrocos', s: '', w: false } },
+      { id: 'm8', status: 'confirmed', t1: { f: '🇦🇺', n: 'Austrália', s: '', w: false }, t2: { f: '🇪🇬', n: 'Egito', s: '', w: false } }
     ],
     round2: [
-      { id: 'm17', status: 'prediction', t1: { f: '🇧🇷', n: 'Brasil', s: '2', w: true }, t2: { f: '🇳🇴', n: 'Noruega', s: '1', w: false } },
-      { id: 'm18', status: 'prediction', t1: { f: '🇪🇸', n: 'Espanha', s: '2', w: true }, t2: { f: '🇨🇭', n: 'Suíça', s: '0', w: false } },
-      { id: 'm19', status: 'prediction', t1: { f: '🇦🇷', n: 'Argentina', s: '3', w: true }, t2: { f: '🇲🇽', n: 'México', s: '1', w: false } },
-      { id: 'm20', status: 'prediction', t1: { f: '🇳🇱', n: 'Holanda', s: '1', w: true }, t2: { f: '🇦🇺', n: 'Austrália', s: '0', w: false } }
+      { id: 'm17', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm18', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm19', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm20', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
     ],
     round3: [
-      { id: 'm25', status: 'prediction', t1: { f: '🇧🇷', n: 'Brasil', s: '0', w: false }, t2: { f: '🇪🇸', n: 'Espanha', s: '1', w: true } },
-      { id: 'm26', status: 'prediction', t1: { f: '🇦🇷', n: 'Argentina', s: '2', w: true }, t2: { f: '🇳🇱', n: 'Holanda', s: '1', w: false } }
+      { id: 'm25', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm26', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
     ],
     round4: [
-      { id: 'm29', status: 'prediction', t1: { f: '🇪🇸', n: 'Espanha', s: '0', w: false }, t2: { f: '🇦🇷', n: 'Argentina', s: '1', w: true } }
+      { id: 'm29', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
     ]
   },
   right: {
     round1: [
-      { id: 'm9', status: 'prediction', t1: { f: '🇫🇷', n: 'França', s: '', w: false }, t2: { f: '🇸🇪', n: 'Suécia', s: '', w: false } },
+      { id: 'm9', status: 'confirmed', t1: { f: '🇫🇷', n: 'França', s: '', w: false }, t2: { f: '🇸🇪', n: 'Suécia', s: '', w: false } },
       { id: 'm10', status: 'completed', t1: { f: '🇿🇦', n: 'África do Sul', s: '0', w: false }, t2: { f: '🇨🇦', n: 'Canadá', s: '1', w: true } },
-      { id: 'm11', status: 'prediction', t1: { f: '🇨🇴', n: 'Colômbia', s: '', w: false }, t2: { f: '🇬🇭', n: 'Gana', s: '', w: false } },
-      { id: 'm12', status: 'prediction', t1: { f: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', n: 'Inglaterra', s: '', w: false }, t2: { f: '🇨🇩', n: 'RD Congo', s: '', w: false } },
+      { id: 'm11', status: 'confirmed', t1: { f: '🇨🇴', n: 'Colômbia', s: '', w: false }, t2: { f: '🇬🇭', n: 'Gana', s: '', w: false } },
+      { id: 'm12', status: 'confirmed', t1: { f: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', n: 'Inglaterra', s: '', w: false }, t2: { f: '🇨🇩', n: 'RD Congo', s: '', w: false } },
       { id: 'm13', status: 'completed', t1: { f: '🇩🇪', n: 'Alemanha', s: '1(3)', w: false }, t2: { f: '🇵🇾', n: 'Paraguai', s: '1(4)', w: true } },
-      { id: 'm14', status: 'prediction', t1: { f: '🇺🇸', n: 'Estados Unidos', s: '', w: false }, t2: { f: '🇧🇦', n: 'Bósnia', s: '', w: false } },
-      { id: 'm15', status: 'prediction', t1: { f: '🇵🇹', n: 'Portugal', s: '', w: false }, t2: { f: '🇭🇷', n: 'Croácia', s: '', w: false } },
-      { id: 'm16', status: 'prediction', t1: { f: '🇧🇪', n: 'Bélgica', s: '', w: false }, t2: { f: '🇸🇳', n: 'Senegal', s: '', w: false } }
+      { id: 'm14', status: 'confirmed', t1: { f: '🇺🇸', n: 'Estados Unidos', s: '', w: false }, t2: { f: '🇧🇦', n: 'Bósnia', s: '', w: false } },
+      { id: 'm15', status: 'confirmed', t1: { f: '🇵🇹', n: 'Portugal', s: '', w: false }, t2: { f: '🇭🇷', n: 'Croácia', s: '', w: false } },
+      { id: 'm16', status: 'confirmed', t1: { f: '🇧🇪', n: 'Bélgica', s: '', w: false }, t2: { f: '🇸🇳', n: 'Senegal', s: '', w: false } }
     ],
     round2: [
-      { id: 'm21', status: 'prediction', t1: { f: '🇫🇷', n: 'França', s: '3', w: true }, t2: { f: '🇨🇦', n: 'Canadá', s: '0', w: false } },
-      { id: 'm22', status: 'prediction', t1: { f: '🇨🇴', n: 'Colômbia', s: '1(5)', w: true }, t2: { f: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', n: 'Inglaterra', s: '1(4)', w: false } },
-      { id: 'm23', status: 'prediction', t1: { f: '🇵🇾', n: 'Paraguai', s: '1', w: false }, t2: { f: '🇺🇸', n: 'Estados Unidos', s: '2', w: true } },
-      { id: 'm24', status: 'prediction', t1: { f: '🇵🇹', n: 'Portugal', s: '1', w: true }, t2: { f: '🇧🇪', n: 'Bélgica', s: '0', w: false } }
+      { id: 'm21', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm22', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm23', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm24', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
     ],
     round3: [
-      { id: 'm27', status: 'prediction', t1: { f: '🇫🇷', n: 'França', s: '2', w: true }, t2: { f: '🇨🇴', n: 'Colômbia', s: '0', w: false } },
-      { id: 'm28', status: 'prediction', t1: { f: '🇺🇸', n: 'Estados Unidos', s: '1', w: false }, t2: { f: '🇵🇹', n: 'Portugal', s: '2', w: true } }
+      { id: 'm27', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } },
+      { id: 'm28', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
     ],
     round4: [
-      { id: 'm30', status: 'prediction', t1: { f: '🇫🇷', n: 'França', s: '2', w: true }, t2: { f: '🇵🇹', n: 'Portugal', s: '1', w: false } }
+      { id: 'm30', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false } }
     ]
   },
   final: {
-    id: 'm31', status: 'prediction', t1: { f: '🇦🇷', n: 'Argentina', s: '2', w: false }, t2: { f: '🇫🇷', n: 'França', s: '3', w: true },
-    champ: { f: '🇫🇷', n: 'França' }
+    id: 'm31', status: 'prediction', t1: { f: '', n: '', s: '', w: false }, t2: { f: '', n: '', s: '', w: false },
+    champ: { f: '', n: '' }
   }
 };
 
@@ -301,6 +301,8 @@ function App() {
       const newData = JSON.parse(JSON.stringify(prev));
       
       const processMatch = (targetObj) => {
+        if (targetObj.status === 'completed') return; // Preserva resultados reais
+        
         if (!targetObj.t1.n || !targetObj.t2.n) return;
         
         const { t1Odd, t2Odd } = getMatchOdds(targetObj.t1.n, targetObj.t2.n);
@@ -328,7 +330,7 @@ function App() {
         targetObj.t1.w = forcedT1Fav;
         targetObj.t2.s = forcedT1Fav ? underGoals : favGoals;
         targetObj.t2.w = !forcedT1Fav;
-        targetObj.status = 'completed';
+        targetObj.status = 'prediction';
       };
 
       const findNextMatch = (matchId) => {
@@ -582,6 +584,11 @@ function App() {
       
       <div className="app-header">
         <h1>🏆 Copa do Mundo 2026</h1>
+        <div className="legend">
+          <div className="legend-item"><div className="legend-color completed"></div> Finalizado</div>
+          <div className="legend-item"><div className="legend-color confirmed"></div> Confirmado</div>
+          <div className="legend-item"><div className="legend-color prediction"></div> Especulação</div>
+        </div>
         <button 
           className="btn-predict-all" 
           onClick={simulateAll}

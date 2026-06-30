@@ -13,8 +13,11 @@
   --completed-bg: rgba(0, 255, 135, 0.05);
   --completed-border: rgba(0, 255, 135, 0.4);
   
-  --prediction-bg: rgba(255, 0, 127, 0.02);
-  --prediction-border: rgba(255, 0, 127, 0.3);
+  --confirmed-bg: rgba(0, 150, 255, 0.08);
+  --confirmed-border: rgba(0, 150, 255, 0.5);
+  
+  --prediction-bg: rgba(255, 255, 255, 0.03);
+  --prediction-border: rgba(255, 255, 255, 0.2);
 }
 
 body {
