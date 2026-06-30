@@ -33,14 +33,51 @@ app.get('/api/analysis/:matchId', async (req, res) => {
 
     console.log(`[⏳] Cache vazio. Iniciando Orquestração de Inteligência...`);
 
-    // 2. Busca Dados Reais na Sportmonks (MOCK: Para implementarmos a chave no futuro)
-    // Na prática seria: const sportmonksRes = await axios.get(`https://api.sportmonks.com/v3/football/...`);
-    // Como ainda vamos definir a estrutura exata da Sportmonks, vamos preparar o terreno:
+    // 2. Busca Dados Reais na Sportmonks
     let sportmonksContext = "";
-    if (process.env.SPORTMONKS_API_TOKEN) {
-      console.log(`[⚽] Buscando dados táticos reais na Sportmonks...`);
-      // AQUI ENTRARÁ O FETCH REAL DA SPORTMONKS DEPOIS
-      sportmonksContext = `Dados em tempo real: As equipes estão com força total, sem lesões reportadas recentemente nas últimas chamadas da Sportmonks.`;
+    const smToken = process.env.SPORTMONKS_API_TOKEN;
+    if (smToken) {
+      console.log(`[⚽] Buscando IDs na Sportmonks para ${t1} e ${t2}...`);
+      try {
+        const resT1 = await axios.get(`https://api.sportmonks.com/v3/football/teams/search/${t1}?api_token=${smToken}`);
+        const idT1 = resT1.data?.data?.[0]?.id;
+        
+        const resT2 = await axios.get(`https://api.sportmonks.com/v3/football/teams/search/${t2}?api_token=${smToken}`);
+        const idT2 = resT2.data?.data?.[0]?.id;
+
+        if (idT1 && idT2) {
+          console.log(`[⚽] Buscando H2H Fixture para os IDs ${idT1} e ${idT2}...`);
+          const resH2H = await axios.get(`https://api.sportmonks.com/v3/football/fixtures/head-to-head/${idT1}/${idT2}?api_token=${smToken}&include=lineups.player,sidelined.player`);
+          
+          const fixtures = resH2H.data?.data || [];
+          if (fixtures.length > 0) {
+            const latestFixture = fixtures[0]; // Pega o último confronto
+            
+            // Extrai Escalações
+            let lineups = [];
+            if (latestFixture.lineups) {
+              lineups = latestFixture.lineups.map(l => l.player?.name || l.player_id).filter(Boolean);
+            }
+            
+            // Extrai Desfalques
+            let sidelined = [];
+            if (latestFixture.sidelined) {
+              sidelined = latestFixture.sidelined.map(s => s.player?.name || s.player_id).filter(Boolean);
+            }
+
+            sportmonksContext = `DADOS REAIS DA PARTIDA (SPORTMONKS API):
+            - Jogadores relacionados/escalados encontrados: ${lineups.length > 0 ? lineups.slice(0, 22).join(', ') : 'Escalação oficial ainda não liberada.'}
+            - Desfalques/Lesões Oficiais Confirmadas para este jogo: ${sidelined.length > 0 ? sidelined.join(', ') : 'Nenhum desfalque importante reportado no momento.'}
+            
+            (Analise o jogo focando estritamente nestes desfalques e elencos caso estejam disponíveis, caso contrário, use sua base histórica de conhecimento sobre as equipes principais).`;
+          } else {
+             sportmonksContext = `Dados Reais: Não foi encontrado um Head-to-Head oficial ao vivo hoje. Preveja usando a força máxima esperada de cada seleção na Copa.`;
+          }
+        }
+      } catch (smError) {
+        console.error(`[⚠️] Erro na Sportmonks:`, smError.response?.data || smError.message);
+        sportmonksContext = `Aviso: Conexão com os dados ao vivo oscilou. Faça uma previsão tática clássica baseada no elenco principal.`;
+      }
     }
 
     // 3. Monta o Prompt Super Completo
