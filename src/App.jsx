@@ -437,24 +437,26 @@ function App() {
             )}
           </div>
 
-          <div 
-            id={matches[i+1].id} 
-            className={`match ${matches[i+1].status} clickable`}
-            onClick={() => setSelectedMatchModal({ match: matches[i+1], side, round: roundName, odds: getMatchOdds(matches[i+1].t1.n, matches[i+1].t2.n) })}
-          >
-            {renderTeam(matches[i+1].t1, side, roundName, matches[i+1], 't1')}
-            {renderTeam(matches[i+1].t2, side, roundName, matches[i+1], 't2')}
-            
-            {matches[i+1].status !== 'completed' && (
-              <div 
-                className="magic-wand" 
-                onClick={(e) => { e.stopPropagation(); applyMagicPrediction(matches[i+1], side, roundName); }} 
-                title="Prever vencedor com IA Tática"
-              >
-                🪄
-              </div>
-            )}
-          </div>
+          {matches[i+1] && (
+            <div 
+              id={matches[i+1].id} 
+              className={`match ${matches[i+1].status} clickable`}
+              onClick={() => setSelectedMatchModal({ match: matches[i+1], side, round: roundName, odds: getMatchOdds(matches[i+1].t1.n, matches[i+1].t2.n) })}
+            >
+              {renderTeam(matches[i+1].t1, side, roundName, matches[i+1], 't1')}
+              {renderTeam(matches[i+1].t2, side, roundName, matches[i+1], 't2')}
+              
+              {matches[i+1].status !== 'completed' && (
+                <div 
+                  className="magic-wand" 
+                  onClick={(e) => { e.stopPropagation(); applyMagicPrediction(matches[i+1], side, roundName); }} 
+                  title="Prever vencedor com IA Tática"
+                >
+                  🪄
+                </div>
+              )}
+            </div>
+          )}
         </div>
       );
     }
