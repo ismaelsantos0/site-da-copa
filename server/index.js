@@ -55,6 +55,7 @@ app.get('/api/analysis/:matchId', async (req, res) => {
        - Pontos Fortes: ${team1Data.tactical_data.pontos_fortes}
        - Fraqueza Mapeada: ${team1Data.tactical_data.pontos_fracos}
        - Qualidade do Setor (0-10): Ataque ${team1Data.tactical_data.notas_gerais.ataque} | Defesa ${team1Data.tactical_data.notas_gerais.defesa} | Meio ${team1Data.tactical_data.notas_gerais.meio}
+       - Estatísticas Reais da Temporada (Sportmonks): Posse de Bola: ${team1Data.tactical_data.real_stats?.ball_possession}%, Total de Ataques: ${team1Data.tactical_data.real_stats?.attacks}, Ataques Perigosos: ${team1Data.tactical_data.real_stats?.dangerous_attacks}, Gols: ${team1Data.tactical_data.real_stats?.goals}
 
        === DADOS TÁTICOS BASE (${t2}) ===
        - Titulares Oficiais: ${t2Titulares}
@@ -64,6 +65,7 @@ app.get('/api/analysis/:matchId', async (req, res) => {
        - Pontos Fortes: ${team2Data.tactical_data.pontos_fortes}
        - Fraqueza Mapeada: ${team2Data.tactical_data.pontos_fracos}
        - Qualidade do Setor (0-10): Ataque ${team2Data.tactical_data.notas_gerais.ataque} | Defesa ${team2Data.tactical_data.notas_gerais.defesa} | Meio ${team2Data.tactical_data.notas_gerais.meio}
+       - Estatísticas Reais da Temporada (Sportmonks): Posse de Bola: ${team2Data.tactical_data.real_stats?.ball_possession}%, Total de Ataques: ${team2Data.tactical_data.real_stats?.attacks}, Ataques Perigosos: ${team2Data.tactical_data.real_stats?.dangerous_attacks}, Gols: ${team2Data.tactical_data.real_stats?.goals}
        `;
     } else {
        tacticalContext = `[Aviso: Dados táticos base ausentes no DB. Use conhecimento geral para ${t1} e ${t2}.]`;
