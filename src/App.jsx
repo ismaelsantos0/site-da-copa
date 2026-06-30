@@ -79,15 +79,39 @@ const connectionsDef = [
   { from: 'm30', to: 'm31', isLeft: false }
 ];
 
-const teamAbbr = {
-  'Brasil': 'BR', 'Japão': 'JP', 'C. do Marfim': 'CI', 'Noruega': 'NO',
-  'Espanha': 'ES', 'Áustria': 'AT', 'Suíça': 'CH', 'Argélia': 'DZ',
-  'Argentina': 'AR', 'Cabo Verde': 'CV', 'México': 'MX', 'Equador': 'EC',
-  'Holanda': 'NL', 'Marrocos': 'MA', 'Austrália': 'AU', 'Egito': 'EG',
-  'França': 'FR', 'Suécia': 'SE', 'África do Sul': 'ZA', 'Canadá': 'CA',
-  'Colômbia': 'CO', 'Gana': 'GH', 'Inglaterra': 'EN', 'RD Congo': 'CD',
-  'Alemanha': 'DE', 'Paraguai': 'PY', 'Estados Unidos': 'US', 'Bósnia': 'BA',
-  'Portugal': 'PT', 'Croácia': 'HR', 'Bélgica': 'BE', 'Senegal': 'SN'
+const teamInfo = {
+  'Brasil': { fifa: 'BRA', iso: 'br' },
+  'Japão': { fifa: 'JPN', iso: 'jp' },
+  'C. do Marfim': { fifa: 'CIV', iso: 'ci' },
+  'Noruega': { fifa: 'NOR', iso: 'no' },
+  'Espanha': { fifa: 'ESP', iso: 'es' },
+  'Áustria': { fifa: 'AUT', iso: 'at' },
+  'Suíça': { fifa: 'SUI', iso: 'ch' },
+  'Argélia': { fifa: 'ALG', iso: 'dz' },
+  'Argentina': { fifa: 'ARG', iso: 'ar' },
+  'Cabo Verde': { fifa: 'CPV', iso: 'cv' },
+  'México': { fifa: 'MEX', iso: 'mx' },
+  'Equador': { fifa: 'ECU', iso: 'ec' },
+  'Holanda': { fifa: 'NED', iso: 'nl' },
+  'Marrocos': { fifa: 'MAR', iso: 'ma' },
+  'Austrália': { fifa: 'AUS', iso: 'au' },
+  'Egito': { fifa: 'EGY', iso: 'eg' },
+  'França': { fifa: 'FRA', iso: 'fr' },
+  'Suécia': { fifa: 'SWE', iso: 'se' },
+  'África do Sul': { fifa: 'RSA', iso: 'za' },
+  'Canadá': { fifa: 'CAN', iso: 'ca' },
+  'Colômbia': { fifa: 'COL', iso: 'co' },
+  'Gana': { fifa: 'GHA', iso: 'gh' },
+  'Inglaterra': { fifa: 'ENG', iso: 'gb-eng' },
+  'RD Congo': { fifa: 'COD', iso: 'cd' },
+  'Alemanha': { fifa: 'GER', iso: 'de' },
+  'Paraguai': { fifa: 'PAR', iso: 'py' },
+  'Estados Unidos': { fifa: 'USA', iso: 'us' },
+  'Bósnia': { fifa: 'BIH', iso: 'ba' },
+  'Portugal': { fifa: 'POR', iso: 'pt' },
+  'Croácia': { fifa: 'CRO', iso: 'hr' },
+  'Bélgica': { fifa: 'BEL', iso: 'be' },
+  'Senegal': { fifa: 'SEN', iso: 'sn' }
 };
 
 function App() {
@@ -411,12 +435,16 @@ function App() {
   }, [data, allOdds]);
 
   const renderTeam = (t, side, round, matchObj, teamKey) => {
-    const abbr = teamAbbr[t.n] || (t.n ? t.n.substring(0, 2).toUpperCase() : '??');
+    const info = teamInfo[t.n] || { fifa: t.n ? t.n.substring(0, 3).toUpperCase() : '', iso: '' };
 
     return (
       <div className={`team ${t.w ? 'winner' : ''}`}>
-        <span className="team-flag">{t.f}</span>
-        <span className="team-abbr">{abbr}</span>
+        {info.iso ? (
+          <img src={`https://flagcdn.com/w40/${info.iso}.png`} alt={t.n} className="team-flag-img" />
+        ) : (
+          <div className="team-flag-placeholder"></div>
+        )}
+        <span className="team-abbr">{info.fifa}</span>
         <span className="team-score">{t.s}</span>
       </div>
     );
@@ -497,13 +525,13 @@ function App() {
           {isDefined ? (
             <div className="modal-teams-stats">
               <div className="modal-team-row">
-                <span className="modal-flag">{match.t1.f}</span>
+                <img src={`https://flagcdn.com/w80/${teamInfo[match.t1.n]?.iso || ''}.png`} className="modal-flag-img" alt={match.t1.n} onError={(e) => e.target.style.display='none'} />
                 <span className="modal-name">{match.t1.n}</span>
                 <span className="modal-odd">{odds.t1Odd ? odds.t1Odd.toFixed(2) : '-'}</span>
               </div>
               <div className="modal-vs">VS</div>
               <div className="modal-team-row">
-                <span className="modal-flag">{match.t2.f}</span>
+                <img src={`https://flagcdn.com/w80/${teamInfo[match.t2.n]?.iso || ''}.png`} className="modal-flag-img" alt={match.t2.n} onError={(e) => e.target.style.display='none'} />
                 <span className="modal-name">{match.t2.n}</span>
                 <span className="modal-odd">{odds.t2Odd ? odds.t2Odd.toFixed(2) : '-'}</span>
               </div>
@@ -578,8 +606,14 @@ function App() {
               <div className="champion-box">
                 <h2>CAMPEÃO</h2>
                 <div className="champ-team">
-                  <input className="editable-input team-flag-input" value={data.final.champ.f} onChange={(e) => updateMatch('final', null, null, 'champ', 'f', e.target.value)} />
-                  <input className="editable-input" value={data.final.champ.n} onChange={(e) => updateMatch('final', null, null, 'champ', 'n', e.target.value)} style={{textAlign: 'center'}} />
+                  {data.final.champ.n ? (
+                    <>
+                      <img src={`https://flagcdn.com/w80/${teamInfo[data.final.champ.n]?.iso || ''}.png`} className="champ-flag-img" alt={data.final.champ.n} onError={(e) => e.target.style.display='none'} />
+                      <span className="champ-name-text">{data.final.champ.n}</span>
+                    </>
+                  ) : (
+                    <span className="champ-name-text">A DEFINIR</span>
+                  )}
                 </div>
               </div>
               <div className="final-match-container">

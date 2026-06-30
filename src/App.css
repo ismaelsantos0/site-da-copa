@@ -602,3 +602,59 @@
 .match.clickable { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .match.clickable:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 255, 170, 0.15); }
 
+
+/* Flag Image Styles */
+.team-flag-img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.team-flag-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: rgba(255,255,255,0.05);
+}
+
+.team-abbr {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  flex: 1;
+  color: #a0a0b0;
+}
+.team.winner .team-abbr { color: #fff; }
+
+.modal-flag-img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  border: 2px solid rgba(255,255,255,0.1);
+}
+
+.champ-flag-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  border: 2px solid gold;
+  margin-bottom: 10px;
+}
+.champ-name-text {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: gold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
