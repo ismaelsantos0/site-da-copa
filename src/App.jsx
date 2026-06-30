@@ -835,6 +835,30 @@ function App() {
                     <p><strong>Destaque:</strong> <span style={{color: '#fbbf24'}}>{selectedTeam.tactical_data.jogador_chave}</span></p>
                   </div>
 
+                  {selectedTeam.tactical_data.real_stats && (
+                    <div className="real-stats-section">
+                      <h3>Estatísticas Reais (Sportmonks)</h3>
+                      <div className="stats-grid">
+                        <div className="stat-card">
+                          <span className="stat-value">{selectedTeam.tactical_data.real_stats.ball_possession}%</span>
+                          <span className="stat-label">Posse Média</span>
+                        </div>
+                        <div className="stat-card">
+                          <span className="stat-value">{selectedTeam.tactical_data.real_stats.attacks}</span>
+                          <span className="stat-label">Ataques</span>
+                        </div>
+                        <div className="stat-card">
+                          <span className="stat-value">{selectedTeam.tactical_data.real_stats.dangerous_attacks}</span>
+                          <span className="stat-label">Ataques Perigosos</span>
+                        </div>
+                        <div className="stat-card">
+                          <span className="stat-value">{selectedTeam.tactical_data.real_stats.goals}</span>
+                          <span className="stat-label">Gols</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="roster-section">
                     <h3>Titulares Oficiais</h3>
                     <div className="roster-list">

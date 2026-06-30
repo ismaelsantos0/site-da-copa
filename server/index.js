@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import { getCachedAnalysis, saveAnalysisToCache, getTeamInfo } from './db.js';
 import { seedDatabase } from './seed.js';
+import { syncSportmonksStats } from './syncSportmonks.js';
 
 dotenv.config();
 
@@ -152,6 +153,17 @@ app.get('/api/team/:nome', async (req, res) => {
   } catch (error) {
     console.error(`[❌] Erro ao buscar seleção ${nome}:`, error.message);
     res.status(500).json({ error: 'Falha ao buscar seleção.' });
+  }
+});
+
+// Nova rota (Admin): Sincroniza estatísticas reais da Sportmonks
+app.get('/api/admin/sync-stats', async (req, res) => {
+  try {
+    // Roda assincronamente em background para não travar o request
+    syncSportmonksStats();
+    res.json({ message: 'Sincronização iniciada em background. Verifique os logs do servidor.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Falha ao iniciar sincronização.' });
   }
 });
 
