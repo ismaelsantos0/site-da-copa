@@ -3,9 +3,21 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
-  text-align: center;
-  pointer-events: none; /* Let clicks pass through if needed, except for buttons inside */
+  z-index: 9999999 !important;
+  pointer-events: auto !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  background: rgba(10, 14, 23, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px 35px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  width: max-content;
+  max-width: 90vw;
 }
 
 .app-header h1 {
@@ -19,11 +31,26 @@
   letter-spacing: 1px;
 }
 
+.header-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .header-controls {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 30px;
+  }
+}
+
 .legend {
   display: flex;
   justify-content: center;
   gap: 15px;
-  margin-top: 10px;
   pointer-events: auto;
 }
 
@@ -444,12 +471,12 @@
   color: #000;
   border: none;
   border-radius: 8px;
-  padding: 8px 16px;
+  padding: 10px 24px;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  margin: 0 20px;
+  white-space: nowrap;
 }
 .btn-predict-all:hover {
   transform: translateY(-2px);
@@ -667,15 +694,6 @@
 }
 
 
-.app-header {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  z-index: 9999999 !important;
-  pointer-events: auto !important;
-}
 .simulation-overlay {
   z-index: 9999999 !important;
 }

@@ -638,19 +638,21 @@ function App() {
       
       <div className="app-header">
         <h1>🏆 Copa do Mundo 2026</h1>
-        <div className="legend">
-          <div className="legend-item"><div className="legend-color completed"></div> Finalizado</div>
-          <div className="legend-item"><div className="legend-color confirmed"></div> Confirmado</div>
-          <div className="legend-item"><div className="legend-color prediction"></div> Especulação</div>
+        <div className="header-controls">
+          <div className="legend">
+            <div className="legend-item"><div className="legend-color completed"></div> Finalizado</div>
+            <div className="legend-item"><div className="legend-color confirmed"></div> Confirmado</div>
+            <div className="legend-item"><div className="legend-color prediction"></div> Especulação</div>
+          </div>
+          <button 
+            className="btn-predict-all" 
+            onClick={simulateAll}
+            disabled={isSimulating}
+            style={{ opacity: isSimulating ? 0.7 : 1, cursor: isSimulating ? 'not-allowed' : 'pointer' }}
+          >
+            {isSimulating ? '⏳ Aguarde...' : '🪄 Simular Tudo'}
+          </button>
         </div>
-        <button 
-          className="btn-predict-all" 
-          onClick={simulateAll}
-          disabled={isSimulating}
-          style={{ opacity: isSimulating ? 0.7 : 1, cursor: isSimulating ? 'not-allowed' : 'pointer' }}
-        >
-          {isSimulating ? '⏳ Aguarde...' : '🪄 Simular Tudo'}
-        </button>
       </div>
 
       <TransformWrapper 
