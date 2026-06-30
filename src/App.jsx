@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { teamStats, calculateTeamStrength, getTacticalMultiplier } from './teamStats';
 import './App.css';
 
 const initialMatches = {
@@ -122,10 +123,32 @@ function App() {
       return { t1Odd: t1Odd?.price || null, t2Odd: t2Odd?.price || null };
     }
 
-    const seed = teamName1.length + teamName2.length;
+    // Fallback: Motor Estatístico Tático (teamStats.js)
+    const str1 = calculateTeamStrength(teamName1);
+    const str2 = calculateTeamStrength(teamName2);
+    const stat1 = teamStats[teamName1] || { tactic: 'balanced' };
+    const stat2 = teamStats[teamName2] || { tactic: 'balanced' };
+    
+    // Aplica bônus/pênalti tático de acordo com o embate de estilos
+    const mult1 = getTacticalMultiplier(stat1.tactic, stat2.tactic);
+    const mult2 = getTacticalMultiplier(stat2.tactic, stat1.tactic);
+    
+    const finalStr1 = str1 * mult1;
+    const finalStr2 = str2 * mult2;
+    
+    const diff = finalStr1 - finalStr2;
+    
+    // Odd base para times idênticos é ~2.60. Cada ponto de força diminui/aumenta a odd
+    let calcT1Odd = 2.6 - (diff * 0.08);
+    let calcT2Odd = 2.6 + (diff * 0.08);
+    
+    // Limita as odds a valores realistas
+    calcT1Odd = Math.max(1.10, Math.min(19.0, calcT1Odd));
+    calcT2Odd = Math.max(1.10, Math.min(19.0, calcT2Odd));
+
     return {
-       t1Odd: +(1.2 + (seed % 3) * 0.4).toFixed(2),
-       t2Odd: +(1.5 + (seed % 4) * 0.6).toFixed(2)
+       t1Odd: +calcT1Odd.toFixed(2),
+       t2Odd: +calcT2Odd.toFixed(2)
     };
   };
 
