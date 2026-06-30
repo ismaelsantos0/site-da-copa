@@ -140,6 +140,8 @@ function App() {
   }, []);
 
   const getMatchOdds = (teamName1, teamName2) => {
+    if (!teamName1 || !teamName2) return { t1Odd: null, t2Odd: null };
+
     let matchOdds = allOdds.find(m => 
       (m.home_team.toLowerCase().includes(teamName1.toLowerCase()) || m.away_team.toLowerCase().includes(teamName1.toLowerCase())) ||
       (m.home_team.toLowerCase().includes(teamName2.toLowerCase()) || m.away_team.toLowerCase().includes(teamName2.toLowerCase()))
