@@ -369,3 +369,33 @@
   opacity: 1;
 }
 
+
+.odd-box.fav {
+  border-color: var(--primary);
+  background: rgba(0, 255, 170, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
+}
+
+.prediction-action {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.btn-predict {
+  background: linear-gradient(135deg, var(--primary) 0%, #00b377 100%);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+
+.btn-predict:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 255, 170, 0.3);
+}
+

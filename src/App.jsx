@@ -120,8 +120,8 @@ function App() {
     });
   };
 
-  const openOddsModal = (match) => {
-    setSelectedMatch(match);
+  const openOddsModal = (match, side, round) => {
+    setSelectedMatch({ ...match, side, round });
     setOddsData(null);
     setOddsError(null);
     setOddsLoading(true);
@@ -241,14 +241,14 @@ function App() {
         <div key={i} className="match-connector">
           <div className={`match ${matches[i].status}`} id={matches[i].id}>
             <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i].id); }} title="Alternar Status">↺</button>
-            <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i]); }} title="Ver Odds">📊</button>
+            <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i], side, roundName); }} title="Ver Odds">📊</button>
             {renderTeam(matches[i].t1, side, roundName, matches[i].id, 't1')}
             {renderTeam(matches[i].t2, side, roundName, matches[i].id, 't2')}
           </div>
           {matches[i+1] && (
             <div className={`match ${matches[i+1].status}`} id={matches[i+1].id}>
               <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus(side, roundName, matches[i+1].id); }} title="Alternar Status">↺</button>
-              <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i+1]); }} title="Ver Odds">📊</button>
+              <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(matches[i+1], side, roundName); }} title="Ver Odds">📊</button>
               {renderTeam(matches[i+1].t1, side, roundName, matches[i+1].id, 't1')}
               {renderTeam(matches[i+1].t2, side, roundName, matches[i+1].id, 't2')}
             </div>
@@ -259,8 +259,41 @@ function App() {
     return connectors;
   };
 
+  const getFavorite = () => {
+    if (!oddsData || !oddsData.home || !oddsData.away) return null;
+    if (oddsData.home.price < oddsData.away.price) return 'home';
+    if (oddsData.away.price < oddsData.home.price) return 'away';
+    return 'draw';
+  };
+
+  const applyPrediction = () => {
+    const fav = getFavorite();
+    if (!fav || fav === 'draw') return;
+
+    const isHomeFav = fav === 'home';
+    const { side, round, id } = selectedMatch;
+    
+    setData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      let matchObj;
+      if (side === 'final') matchObj = newData.final;
+      else matchObj = newData[side][round].find(m => m.id === id);
+      
+      if (matchObj) {
+         matchObj.t1.s = isHomeFav ? '2' : '0';
+         matchObj.t1.w = isHomeFav;
+         matchObj.t2.s = isHomeFav ? '0' : '2';
+         matchObj.t2.w = !isHomeFav;
+      }
+      return newData;
+    });
+    closeModal();
+  };
+
   const renderModal = () => {
     if (!selectedMatch) return null;
+    const fav = getFavorite();
+
     return (
       <div className="modal-overlay" onClick={closeModal}>
         <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -274,20 +307,30 @@ function App() {
           {oddsError && <div className="error-message">{oddsError}</div>}
           
           {oddsData && (
-            <div className="odds-container">
-              <div className="odd-box">
-                <h4>{oddsData.home?.name || 'Casa'}</h4>
-                <div className="odd-value">{oddsData.home?.price?.toFixed(2) || '-'}</div>
+            <>
+              <div className="odds-container">
+                <div className={`odd-box ${fav === 'home' ? 'fav' : ''}`}>
+                  <h4>{oddsData.home?.name || 'Casa'}</h4>
+                  <div className="odd-value">{oddsData.home?.price?.toFixed(2) || '-'}</div>
+                </div>
+                <div className="odd-box">
+                  <h4>Empate</h4>
+                  <div className="odd-value">{oddsData.draw?.price?.toFixed(2) || '-'}</div>
+                </div>
+                <div className={`odd-box ${fav === 'away' ? 'fav' : ''}`}>
+                  <h4>{oddsData.away?.name || 'Fora'}</h4>
+                  <div className="odd-value">{oddsData.away?.price?.toFixed(2) || '-'}</div>
+                </div>
               </div>
-              <div className="odd-box">
-                <h4>Empate</h4>
-                <div className="odd-value">{oddsData.draw?.price?.toFixed(2) || '-'}</div>
-              </div>
-              <div className="odd-box">
-                <h4>{oddsData.away?.name || 'Fora'}</h4>
-                <div className="odd-value">{oddsData.away?.price?.toFixed(2) || '-'}</div>
-              </div>
-            </div>
+              
+              {fav && fav !== 'draw' && (
+                <div className="prediction-action">
+                  <button className="btn-predict" onClick={applyPrediction}>
+                    🏆 Definir {fav === 'home' ? selectedMatch.t1.n : selectedMatch.t2.n} como Vencedor (Placar 2x0)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -341,7 +384,7 @@ function App() {
               <div className="final-match-container">
                 <div className="match final-match" id={data.final.id}>
                    <button className="action-btn btn-status" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleStatus('final', null, data.final.id); }}>↺</button>
-                   <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(data.final); }}>📊</button>
+                   <button className="action-btn btn-stats" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openOddsModal(data.final, 'final', null); }}>📊</button>
                   {renderTeam(data.final.t1, 'final', null, data.final.id, 't1')}
                   {renderTeam(data.final.t2, 'final', null, data.final.id, 't2')}
                 </div>
