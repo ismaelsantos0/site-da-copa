@@ -38,6 +38,15 @@ const initDB = async () => {
       )
     `);
 
+    // Tabela de Salvamento em Nuvem Pessoal do Chaveamento
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS my_bracket (
+        id INTEGER PRIMARY KEY,
+        bracket_data TEXT,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('🐘 Banco de Dados PostgreSQL conectado e tabelas garantidas.');
   } catch (err) {
     console.error('❌ Erro ao conectar no PostgreSQL:', err);

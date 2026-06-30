@@ -262,3 +262,25 @@ body {
   color: #fef08a;
 }
 
+
+.cloud-save-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #00ffaa, #0088ff);
+  color: #111;
+  font-weight: bold;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(0,255,170,0.4);
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+.cloud-save-btn:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,255,170,0.6);
+}
+

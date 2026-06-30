@@ -218,6 +218,52 @@ app.get('/api/h2h/:t1/:t2', async (req, res) => {
   }
 });
 
+// ==========================================
+// ROTAS DE SINCRONIZAÇÃO EM NUVEM (CLOUD SAVE)
+// ==========================================
+
+app.post('/api/my-bracket', async (req, res) => {
+  try {
+    const { bracket_data } = req.body;
+    
+    // Tenta atualizar a linha de id 1. Se não existir, insere.
+    const updateRes = await pool.query(
+      'UPDATE my_bracket SET bracket_data = $1, last_updated = CURRENT_TIMESTAMP WHERE id = 1 RETURNING *',
+      [JSON.stringify(bracket_data)]
+    );
+
+    if (updateRes.rows.length === 0) {
+      await pool.query(
+        'INSERT INTO my_bracket (id, bracket_data) VALUES (1, $1)',
+        [JSON.stringify(bracket_data)]
+      );
+    }
+    
+    res.json({ success: true, message: 'Chaveamento salvo na nuvem com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao salvar na nuvem:', error);
+    res.status(500).json({ error: 'Falha ao salvar chaveamento.' });
+  }
+});
+
+app.get('/api/my-bracket', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT bracket_data FROM my_bracket WHERE id = 1');
+    if (result.rows.length > 0) {
+      res.json({ success: true, bracket_data: JSON.parse(result.rows[0].bracket_data) });
+    } else {
+      res.json({ success: false, message: 'Nenhum chaveamento salvo.' });
+    }
+  } catch (error) {
+    console.error('Erro ao buscar da nuvem:', error);
+    res.status(500).json({ error: 'Falha ao buscar chaveamento.' });
+  }
+});
+
+// ==========================================
+// ROTAS DE ADMIN
+// ==========================================
+
 // Nova rota (Admin): Sincroniza estatísticas reais da Sportmonks
 app.get('/api/admin/sync-stats', async (req, res) => {
   try {

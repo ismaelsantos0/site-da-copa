@@ -160,22 +160,59 @@ function App() {
 
   const openTeamModal = async (teamName) => {
     setSelectedTeam({ loading: true, nome: teamName });
-    if (teamDataCache[teamName]) {
-      setSelectedTeam(teamDataCache[teamName]);
-    } else {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    
+    try {
+      const res = await fetch(`${apiUrl}/api/team/${encodeURIComponent(teamName)}`);
+      if (res.ok) {
+        const tData = await res.json();
+        setSelectedTeam(tData);
+      } else {
+        setSelectedTeam({ erro: 'Não foi possível buscar as informações desta seleção.' });
+      }
+    } catch (error) {
+      setSelectedTeam({ erro: 'Erro de conexão com o banco de dados.' });
+    }
+  };
+
+  // Carrega chaveamento salvo da nuvem ao iniciar o app
+  useEffect(() => {
+    const loadFromCloud = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const res = await fetch(`${apiUrl}/api/team/${encodeURIComponent(teamName)}`);
+        const res = await fetch(`${apiUrl}/api/my-bracket`);
         if (res.ok) {
-          const tData = await res.json();
-          setTeamDataCache(prev => ({ ...prev, [teamName]: tData }));
-          setSelectedTeam(tData);
-        } else {
-          setSelectedTeam({ error: `Ficha não encontrada (Status: ${res.status}).`, nome: teamName });
+          const json = await res.json();
+          if (json.success && json.bracket_data) {
+            setData(json.bracket_data);
+            console.log('Chaveamento carregado da nuvem!');
+          }
         }
-      } catch (err) {
-        setSelectedTeam({ error: `Erro: ${err.name} - ${err.message}`, nome: teamName });
+      } catch (e) {
+        console.error('Erro ao carregar chaveamento:', e);
       }
+    };
+    loadFromCloud();
+  }, []);
+
+  const saveToCloud = async () => {
+    const btn = document.getElementById('cloud-save-btn');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '⏳ Salvando...';
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${apiUrl}/api/my-bracket`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bracket_data: data })
+      });
+      if (res.ok) {
+        btn.innerHTML = '✅ Salvo!';
+        setTimeout(() => { btn.innerHTML = oldText; }, 2000);
+      }
+    } catch (e) {
+      btn.innerHTML = '❌ Erro';
+      setTimeout(() => { btn.innerHTML = oldText; }, 2000);
     }
   };
 
@@ -758,6 +795,12 @@ function App() {
           </div>
         </div>
       )}
+      
+      {/* Botão Flutuante de Salvar na Nuvem */}
+      <button id="cloud-save-btn" className="cloud-save-btn" onClick={saveToCloud}>
+        ☁️ Salvar Progresso
+      </button>
+
       <div className="background-overlay"></div>
       
       <div className="app-header">
