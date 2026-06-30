@@ -123,6 +123,34 @@ function App() {
   const [aiCache, setAiCache] = useState({});
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
+  // Efeito para buscar análise do backend quando um modal é aberto
+  useEffect(() => {
+    if (!selectedMatchModal) return;
+    const { match, odds } = selectedMatchModal;
+    if (aiCache[match.id]) return; // Já temos em memória
+    if (!match.t1.n || !match.t2.n) return; // Times não definidos
+
+    const fetchAnalysisFromBackend = async () => {
+      try {
+        const t1 = match.t1.n;
+        const t2 = match.t2.n;
+        const o1 = odds.t1Odd || 2.5;
+        const o2 = odds.t2Odd || 2.5;
+
+        // Bate no nosso servidor Node.js (que fará a orquestração com SQLite, Sportmonks e Gemini)
+        const res = await fetch(`http://localhost:3001/api/analysis/${match.id}?t1=${encodeURIComponent(t1)}&t2=${encodeURIComponent(t2)}&t1Odd=${o1}&t2Odd=${o2}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAiCache(prev => ({ ...prev, [match.id]: data.text }));
+        }
+      } catch (err) {
+        console.log("Backend offline ou análise indisponível no momento.");
+      }
+    };
+
+    fetchAnalysisFromBackend();
+  }, [selectedMatchModal, aiCache]);
+
   const getMatchSchedule = (id) => {
     // Tabela realista da Copa 2026 adaptada para o Fuso UTC-4 (Horário de Roraima)
     const schedules = {
@@ -516,42 +544,6 @@ function App() {
     );
   };
 
-  const generateAIAnalysis = async (matchId, t1, t2, odds) => {
-    if (aiCache[matchId]) return;
-    setIsGeneratingAI(true);
-    try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      const systemPrompt = import.meta.env.VITE_GEMINI_PROMPT || "Você é um analista tático esportivo especialista na Copa do Mundo 2026. Analise o confronto e dê os pontos fortes e fracos de forma bem direta e convincente em 2 parágrafos curtos.";
-
-      if (!apiKey) {
-         setAiCache(prev => ({...prev, [matchId]: "⚠️ A chave de API do Gemini não foi configurada nas variáveis de ambiente do Railway (VITE_GEMINI_API_KEY)."}));
-         setIsGeneratingAI(false);
-         return;
-      }
-
-      const promptText = `${systemPrompt}\n\nConfronto: ${t1.n} vs ${t2.n}\nOdd ${t1.n}: ${odds.t1Odd ? odds.t1Odd.toFixed(2) : 'N/A'}\nOdd ${t2.n}: ${odds.t2Odd ? odds.t2Odd.toFixed(2) : 'N/A'}`;
-
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }]
-        })
-      });
-
-      const data = await res.json();
-      let text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "A IA não conseguiu gerar uma análise no momento.";
-      
-      // Basic markdown parsing for bold text
-      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      
-      setAiCache(prev => ({ ...prev, [matchId]: text }));
-    } catch (e) {
-      console.error(e);
-      setAiCache(prev => ({ ...prev, [matchId]: "❌ Erro ao conectar com a IA do Google Gemini." }));
-    }
-    setIsGeneratingAI(false);
-  };
 
   const renderMatchAnalysis = (match, odds) => {
     const t1 = match.t1;

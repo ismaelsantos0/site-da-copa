@@ -1,0 +1,19 @@
+{
+  "name": "copa-2026-backend",
+  "version": "1.0.0",
+  "description": "Backend API para simulação tática da Copa 2026",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@google/genai": "^0.1.2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  }
+}
