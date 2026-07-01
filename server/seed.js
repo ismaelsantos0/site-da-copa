@@ -35,15 +35,18 @@ export const seedDatabase = async () => {
           ['França', 'Suécia'], ['África do Sul', 'Canadá'], ['Colômbia', 'Gana'], ['Inglaterra', 'RD Congo'],
           ['Alemanha', 'Paraguai'], ['Estados Unidos', 'Bósnia'], ['Portugal', 'Croácia'], ['Bélgica', 'Senegal']
         ];
-        // Distribuindo os jogos para refletir com exatidão a linha do tempo do usuário
-        // Jogos que já aconteceram: R32-1, R32-2, R32-10, R32-13
-        // Todo o resto ainda vai acontecer
         const getMatchDate = (index) => {
           const matchNum = index + 1;
+          // Jogos que já passaram (Brasil, Noruega, Canadá, Paraguai)
           if (matchNum === 1 || matchNum === 2 || matchNum === 10 || matchNum === 13) {
-            return '2026-06-28 15:00:00'; // No passado (já terminou)
+            return '2026-06-28 15:00:00'; 
           }
-          return '2026-07-01 15:00:00'; // No futuro (ainda vai jogar)
+          
+          // O resto será distribuído a partir de amanhã (01/07) para o cron job ir puxando automático
+          // 4 jogos por dia
+          if (matchNum <= 6) return '2026-07-01 15:00:00';
+          if (matchNum <= 11) return '2026-07-02 15:00:00';
+          return '2026-07-03 15:00:00';
         };
 
         // 16-avos de final (16 jogos)
