@@ -57,81 +57,105 @@ const PredictionsModal = ({ onClose }) => {
     }
   };
 
-  // Filtrar para mostrar APENAS os jogos reais que não estão TBD
-  const matchesToShow = matches.filter(m => (m.status === 'CONFIRMED' || m.status === 'FINISHED') && m.t1 !== 'TBD' && m.t2 !== 'TBD');
+  const matchesToShow = matches.filter(m => m.status === 'CONFIRMED' || m.status === 'FINISHED');
+  
+  // Agrupar por fase
+  const groupedMatches = matchesToShow.reduce((acc, m) => {
+    if (!acc[m.stage]) acc[m.stage] = [];
+    acc[m.stage].push(m);
+    return acc;
+  }, {});
+
+  const stageOrder = ['16-avos de Final', 'Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Disputa de 3º Lugar', 'Final'];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content glass-panel predictions-modal" onClick={e => e.stopPropagation()}>
+      <div className="modal-content glass-panel predictions-modal" onClick={e => e.stopPropagation()} style={{maxWidth: '800px', width: '95%'}}>
         <button className="close-btn" onClick={onClose}>✖</button>
-        <h2 className="modal-title">Central de Palpites (Jogos da Vida Real)</h2>
-        <p style={{textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px'}}>Aqui aparecem os confrontos oficiais da Copa quando as seleções são decididas.</p>
+        <h2 className="modal-title">Central de Palpites (Copa 2026 - Real)</h2>
+        <p style={{textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px'}}>Confira a tabela real. Palpites são liberados assim que as seleções são decididas.</p>
         
         {loading ? (
           <div className="loading-spinner"></div>
         ) : (
-          <div className="predictions-list">
+          <div className="predictions-list" style={{maxHeight: '70vh', overflowY: 'auto', paddingRight: '10px'}}>
             {matchesToShow.length === 0 ? (
-              <p className="no-matches">Ainda não temos nenhuma partida oficial de mata-mata com seleções definidas. Aguarde a fase de grupos terminar!</p>
+              <p className="no-matches">Nenhuma partida encontrada.</p>
             ) : (
-              matchesToShow.map(m => (
-                <div key={m.id} className="prediction-card">
-                  <div className="pred-header">
-                    <span className="pred-stage">{m.stage}</span>
-                    {renderStatus(m)}
-                  </div>
-                  
-                  <div className="pred-teams">
-                    <div className="pred-team">
-                      <span className="pred-team-name">{m.t1}</span>
-                      {m.status === 'FINISHED' ? (
-                        <span className="real-score">{m.score_t1}</span>
-                      ) : (
-                        <input 
-                          type="number" 
-                          min="0" 
-                          defaultValue={m.pred_t1 ?? ''}
-                          id={`pred_t1_${m.id}`}
-                        />
-                      )}
-                    </div>
-                    <span className="pred-vs">X</span>
-                    <div className="pred-team">
-                      {m.status === 'FINISHED' ? (
-                        <span className="real-score">{m.score_t2}</span>
-                      ) : (
-                        <input 
-                          type="number" 
-                          min="0" 
-                          defaultValue={m.pred_t2 ?? ''}
-                          id={`pred_t2_${m.id}`}
-                        />
-                      )}
-                      <span className="pred-team-name">{m.t2}</span>
-                    </div>
-                  </div>
+              stageOrder.map(stage => (
+                groupedMatches[stage] && groupedMatches[stage].length > 0 && (
+                  <div key={stage} style={{marginBottom: '30px'}}>
+                    <h3 style={{color: '#eab308', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '15px'}}>{stage}</h3>
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                      {groupedMatches[stage].map(m => {
+                        const canBet = m.t1 !== 'TBD' && m.t2 !== 'TBD';
+                        return (
+                          <div key={m.id} className="prediction-card" style={{opacity: canBet ? 1 : 0.6}}>
+                            <div className="pred-header">
+                              <span className="pred-stage" style={{fontSize: '0.8rem', color: '#888'}}>{m.id}</span>
+                              {canBet ? renderStatus(m) : <span className="pred-status" style={{color: '#666'}}>Aguardando Seleções</span>}
+                            </div>
+                            
+                            <div className="pred-teams">
+                              <div className="pred-team">
+                                <span className="pred-team-name">{m.t1 === 'TBD' ? 'A Definir' : m.t1}</span>
+                                {m.status === 'FINISHED' ? (
+                                  <span className="real-score">{m.score_t1}</span>
+                                ) : (
+                                  <input 
+                                    type="number" 
+                                    min="0" 
+                                    defaultValue={m.pred_t1 ?? ''}
+                                    id={`pred_t1_${m.id}`}
+                                    disabled={!canBet}
+                                    style={{background: !canBet ? '#333' : '#222'}}
+                                  />
+                                )}
+                              </div>
+                              <span className="pred-vs">X</span>
+                              <div className="pred-team">
+                                {m.status === 'FINISHED' ? (
+                                  <span className="real-score">{m.score_t2}</span>
+                                ) : (
+                                  <input 
+                                    type="number" 
+                                    min="0" 
+                                    defaultValue={m.pred_t2 ?? ''}
+                                    id={`pred_t2_${m.id}`}
+                                    disabled={!canBet}
+                                    style={{background: !canBet ? '#333' : '#222'}}
+                                  />
+                                )}
+                                <span className="pred-team-name">{m.t2 === 'TBD' ? 'A Definir' : m.t2}</span>
+                              </div>
+                            </div>
 
-                  {m.status === 'CONFIRMED' && (
-                    <div className="btn-group">
-                      <button 
-                        className="save-pred-btn"
-                        onClick={() => {
-                          const t1G = document.getElementById(`pred_t1_${m.id}`).value;
-                          const t2G = document.getElementById(`pred_t2_${m.id}`).value;
-                          if(t1G !== '' && t2G !== '') handlePredict(m.id, t1G, t2G);
-                        }}
-                      >
-                        Salvar Palpite
-                      </button>
-                    </div>
-                  )}
+                            {m.status === 'CONFIRMED' && canBet && (
+                              <div className="btn-group">
+                                <button 
+                                  className="save-pred-btn"
+                                  onClick={() => {
+                                    const t1G = document.getElementById(`pred_t1_${m.id}`).value;
+                                    const t2G = document.getElementById(`pred_t2_${m.id}`).value;
+                                    if(t1G !== '' && t2G !== '') handlePredict(m.id, t1G, t2G);
+                                  }}
+                                >
+                                  Salvar Palpite
+                                </button>
+                              </div>
+                            )}
 
-                  {m.status === 'FINISHED' && m.pred_t1 !== null && (
-                    <div className="your-bet-was">
-                      Seu palpite foi: <strong>{m.pred_t1} x {m.pred_t2}</strong>
+                            {m.status === 'FINISHED' && m.pred_t1 !== null && (
+                              <div className="your-bet-was">
+                                Seu palpite foi: <strong>{m.pred_t1} x {m.pred_t2}</strong>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )
               ))
             )}
           </div>
