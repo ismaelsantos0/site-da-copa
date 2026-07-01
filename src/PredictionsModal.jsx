@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-const PredictionsModal = ({ onClose }) => {
-  const [matches, setMatches] = useState([]);
+const PredictionsModal = ({ bracketMatches, onClose }) => {
+  const [dbMatches, setDbMatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMatches = async () => {
@@ -10,10 +10,9 @@ const PredictionsModal = ({ onClose }) => {
       const res = await fetch(`${apiUrl}/api/real-matches`);
       const data = await res.json();
       if (Array.isArray(data)) {
-        setMatches(data);
+        setDbMatches(data);
       } else {
-        console.error('API Error:', data);
-        setMatches([]);
+        setDbMatches([]);
       }
     } catch (error) {
       console.error('Erro ao buscar partidas reais:', error);
@@ -26,13 +25,55 @@ const PredictionsModal = ({ onClose }) => {
     fetchMatches();
   }, []);
 
-  const handlePredict = async (matchId, t1Goals, t2Goals) => {
+  const getConfirmedBracketMatches = () => {
+    if (!bracketMatches) return [];
+    const list = [];
+    const extract = (side) => {
+      if (!bracketMatches[side]) return;
+      ['round1', 'round2', 'round3', 'round4'].forEach(r => {
+         if (bracketMatches[side][r]) list.push(...bracketMatches[side][r]);
+      });
+    };
+    extract('left');
+    extract('right');
+    if (bracketMatches.final) list.push(bracketMatches.final);
+    
+    // Filtra apenas os que estão CONFIRMADOS (Azul) no chaveamento
+    const confirmed = list.filter(m => m.status === 'confirmed');
+    
+    return confirmed.map(m => {
+      // Busca se já tem palpite no BD
+      const dbMatch = dbMatches.find(db => db.id.toLowerCase() === m.id.toLowerCase());
+      return {
+        id: m.id,
+        stage: 'Fase Eliminatória',
+        t1: m.t1?.n || 'TBD',
+        t2: m.t2?.n || 'TBD',
+        status: dbMatch?.status || 'CONFIRMED', // Se foi finalizado no BD, pega o status
+        score_t1: dbMatch?.score_t1 ?? null,
+        score_t2: dbMatch?.score_t2 ?? null,
+        pred_t1: dbMatch?.pred_t1 ?? null,
+        pred_t2: dbMatch?.pred_t2 ?? null,
+        pred_status: dbMatch?.pred_status || 'PENDING'
+      };
+    });
+  };
+
+  const matchesToShow = getConfirmedBracketMatches();
+
+  const handlePredict = async (matchId, t1Name, t2Name, t1Goals, t2Goals) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/api/predictions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ match_id: matchId, pred_t1: parseInt(t1Goals), pred_t2: parseInt(t2Goals) })
+        body: JSON.stringify({ 
+          match_id: matchId, 
+          t1: t1Name,
+          t2: t2Name,
+          pred_t1: parseInt(t1Goals), 
+          pred_t2: parseInt(t2Goals) 
+        })
       });
       if (res.ok) {
         fetchMatches();
@@ -42,16 +83,19 @@ const PredictionsModal = ({ onClose }) => {
     }
   };
 
-  const simulateRealMatch = async (matchId, t1Goals, t2Goals) => {
+  const simulateRealMatch = async (matchId, t1Name, t2Name, t1Goals, t2Goals) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      // First ensure the prediction can be saved/match exists
+      await handlePredict(matchId, t1Name, t2Name, t1Goals, t2Goals);
+      
       const res = await fetch(`${apiUrl}/api/admin/simulate-result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ match_id: matchId, real_score_t1: parseInt(t1Goals), real_score_t2: parseInt(t2Goals) })
       });
       if (res.ok) {
-        fetchMatches(); // Recarrega os dados com os selos de Acerto/Erro
+        fetchMatches();
       }
     } catch (e) {
       console.error('Erro ao simular resultado:', e);
@@ -60,7 +104,7 @@ const PredictionsModal = ({ onClose }) => {
 
   const renderStatus = (match) => {
     if (match.status === 'CONFIRMED') {
-      if (match.pred_status === 'PENDING') return <span className="pred-status pending">Pendente</span>;
+      if (match.pred_status === 'PENDING' && match.pred_t1 !== null) return <span className="pred-status pending">Pendente</span>;
       return <span className="pred-status no-bet">Sem Palpite</span>;
     }
     if (match.status === 'FINISHED') {
@@ -80,12 +124,10 @@ const PredictionsModal = ({ onClose }) => {
           <div className="loading-spinner"></div>
         ) : (
           <div className="predictions-list">
-            {matches.filter(m => m.status === 'CONFIRMED' || m.status === 'FINISHED').length === 0 ? (
+            {matchesToShow.length === 0 ? (
               <p className="no-matches">Nenhuma partida real confirmada ainda. O mata-mata começa em Julho de 2026!</p>
             ) : (
-              matches
-                .filter(m => m.status === 'CONFIRMED' || m.status === 'FINISHED')
-                .map(m => (
+              matchesToShow.map(m => (
                 <div key={m.id} className="prediction-card">
                   <div className="pred-header">
                     <span className="pred-stage">{m.stage}</span>
@@ -129,7 +171,7 @@ const PredictionsModal = ({ onClose }) => {
                         onClick={() => {
                           const t1G = document.getElementById(`pred_t1_${m.id}`).value;
                           const t2G = document.getElementById(`pred_t2_${m.id}`).value;
-                          if(t1G !== '' && t2G !== '') handlePredict(m.id, t1G, t2G);
+                          if(t1G !== '' && t2G !== '') handlePredict(m.id, m.t1, m.t2, t1G, t2G);
                         }}
                       >
                         Salvar Palpite
@@ -140,7 +182,7 @@ const PredictionsModal = ({ onClose }) => {
                         onClick={() => {
                           const t1G = document.getElementById(`pred_t1_${m.id}`).value || 0;
                           const t2G = document.getElementById(`pred_t2_${m.id}`).value || 0;
-                          simulateRealMatch(m.id, t1G, t2G);
+                          simulateRealMatch(m.id, m.t1, m.t2, t1G, t2G);
                         }}
                       >
                         🚨 [Admin] Encerrar Jogo (Placar Acima)

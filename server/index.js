@@ -285,22 +285,31 @@ app.get('/api/real-matches', async (req, res) => {
 // Salvar um palpite
 app.post('/api/predictions', async (req, res) => {
   try {
-    const { match_id, pred_t1, pred_t2 } = req.body;
+    const { match_id, pred_t1, pred_t2, t1, t2 } = req.body;
     
-    const checkMatch = await pool.query('SELECT status FROM real_matches WHERE id = $1', [match_id]);
-    if (checkMatch.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado.' });
+    let checkMatch = await pool.query('SELECT status FROM real_matches WHERE id = $1', [match_id.toUpperCase()]);
+    
+    if (checkMatch.rows.length === 0) {
+      // Cria a partida real no banco se ainda não existir
+      await pool.query(
+        "INSERT INTO real_matches (id, stage, t1, t2, status) VALUES ($1, $2, $3, $4, 'CONFIRMED')",
+        [match_id.toUpperCase(), 'Fase Eliminatória', t1 || 'TBD', t2 || 'TBD']
+      );
+      checkMatch = await pool.query('SELECT status FROM real_matches WHERE id = $1', [match_id.toUpperCase()]);
+    }
+    
     if (checkMatch.rows[0].status === 'FINISHED') return res.status(400).json({ error: 'Jogo já encerrado.' });
 
     // Upsert Prediction
     const updateRes = await pool.query(
       'UPDATE my_predictions SET pred_t1 = $1, pred_t2 = $2, last_updated = CURRENT_TIMESTAMP WHERE match_id = $3 RETURNING *',
-      [pred_t1, pred_t2, match_id]
+      [pred_t1, pred_t2, match_id.toUpperCase()]
     );
 
     if (updateRes.rows.length === 0) {
       await pool.query(
         'INSERT INTO my_predictions (match_id, pred_t1, pred_t2) VALUES ($1, $2, $3)',
-        [match_id, pred_t1, pred_t2]
+        [match_id.toUpperCase(), pred_t1, pred_t2]
       );
     }
     
@@ -320,17 +329,22 @@ app.post('/api/admin/simulate-result', async (req, res) => {
   try {
     const { match_id, real_score_t1, real_score_t2 } = req.body;
     
+    const checkMatch = await pool.query('SELECT status FROM real_matches WHERE id = $1', [match_id.toUpperCase()]);
+    if (checkMatch.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado.' });
+    if (checkMatch.rows[0].status === 'FINISHED') return res.status(400).json({ error: 'Jogo já encerrado.' });
+
+    
     // 1. Atualiza o jogo real para FINISHED
     await pool.query(
       "UPDATE real_matches SET status = 'FINISHED', score_t1 = $1, score_t2 = $2 WHERE id = $3",
-      [real_score_t1, real_score_t2, match_id]
+      [real_score_t1, real_score_t2, match_id.toUpperCase()]
     );
 
-    // 2. Avalia o palpite do usuário
-    const pred = await pool.query('SELECT * FROM my_predictions WHERE match_id = $1', [match_id]);
+    // 2. Verifica se houve palpites para este jogo e calcula o Acerto/Erro
+    const predictions = await pool.query('SELECT * FROM my_predictions WHERE match_id = $1', [match_id.toUpperCase()]);
     
-    if (pred.rows.length > 0) {
-      const p = pred.rows[0];
+    if (predictions.rows.length > 0) {
+      const p = predictions.rows[0];
       let newStatus = 'WRONG';
       
       // Checa Acerto Exato do Placar

@@ -814,7 +814,7 @@ function App() {
         ☁️ Salvar Simulação
       </button>
 
-      {showPredictionsModal && <PredictionsModal onClose={() => setShowPredictionsModal(false)} />}
+      {showPredictionsModal && <PredictionsModal bracketMatches={matches} onClose={() => setShowPredictionsModal(false)} />}
 
       <div className="background-overlay"></div>
       
