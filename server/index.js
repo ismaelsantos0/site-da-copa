@@ -324,6 +324,27 @@ app.post('/api/predictions', async (req, res) => {
 // ROTAS DE ADMIN E TESTE
 // ==========================================
 
+// Atualiza quais seleções se classificaram para uma partida
+app.post('/api/admin/update-teams', async (req, res) => {
+  try {
+    const { match_id, t1, t2 } = req.body;
+    
+    const checkMatch = await pool.query('SELECT status FROM real_matches WHERE id = $1', [match_id.toUpperCase()]);
+    if (checkMatch.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado.' });
+    if (checkMatch.rows[0].status === 'FINISHED') return res.status(400).json({ error: 'Jogo já encerrado, impossível alterar as equipes.' });
+
+    await pool.query(
+      "UPDATE real_matches SET t1 = $1, t2 = $2 WHERE id = $3",
+      [t1, t2, match_id.toUpperCase()]
+    );
+
+    res.json({ success: true, message: 'Seleções da partida atualizadas!' });
+  } catch (error) {
+    console.error('Erro ao atualizar equipes da partida:', error);
+    res.status(500).json({ error: 'Falha ao atualizar seleções.' });
+  }
+});
+
 // Simula o encerramento de uma partida real para testar o sistema de acertos do palpite
 app.post('/api/admin/simulate-result', async (req, res) => {
   try {
