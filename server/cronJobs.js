@@ -67,13 +67,19 @@ export const checkAndResolveMatches = async () => {
       } catch (err) {
         console.log(`⚠️ Fallback: Usando simulação para ${match.id} (${err.message})`);
         
-        // Simulação especial baseada na realidade do usuário (Brasil e Noruega avançam)
-        if (match.id === 'R32-1') { // Brasil x Japão (Brasil ganha)
-          realScoreT1 = 3;
+        // Simulação especial baseada na realidade do usuário (Jogos que já ocorreram)
+        if (match.id === 'R32-1') { // Brasil x Japão
+          realScoreT1 = 2;
           realScoreT2 = 1;
-        } else if (match.id === 'R32-2') { // C. do Marfim x Noruega (Noruega ganha)
+        } else if (match.id === 'R32-2') { // C. do Marfim x Noruega
           realScoreT1 = 0;
           realScoreT2 = 2;
+        } else if (match.id === 'R32-10') { // África do Sul x Canadá
+          realScoreT1 = 0;
+          realScoreT2 = 1;
+        } else if (match.id === 'R32-13') { // Alemanha x Paraguai
+          realScoreT1 = 1;
+          realScoreT2 = 2; // Representando a vitória nos pênaltis
         } else {
           // Outros jogos são simulados aleatoriamente
           realScoreT1 = Math.floor(Math.random() * 4);

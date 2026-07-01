@@ -35,17 +35,15 @@ export const seedDatabase = async () => {
           ['França', 'Suécia'], ['África do Sul', 'Canadá'], ['Colômbia', 'Gana'], ['Inglaterra', 'RD Congo'],
           ['Alemanha', 'Paraguai'], ['Estados Unidos', 'Bósnia'], ['Portugal', 'Croácia'], ['Bélgica', 'Senegal']
         ];
-        // Distribuindo os jogos ao longo de 4 dias para ser realista
-        // Dia 28: jogos 1 a 4
-        // Dia 29: jogos 5 a 8
-        // Dia 30: jogos 9 a 12 (hoje, alguns já passaram, outros não)
-        // Dia 01: jogos 13 a 16 (futuro)
+        // Distribuindo os jogos para refletir com exatidão a linha do tempo do usuário
+        // Jogos que já aconteceram: R32-1, R32-2, R32-10, R32-13
+        // Todo o resto ainda vai acontecer
         const getMatchDate = (index) => {
-          if (index < 4) return '2026-06-28 15:00:00';
-          if (index < 8) return '2026-06-29 15:00:00';
-          if (index < 10) return '2026-06-30 14:00:00'; // Já passou
-          if (index < 12) return '2026-06-30 23:00:00'; // Ainda vai acontecer hoje
-          return '2026-07-01 15:00:00'; // Amanhã
+          const matchNum = index + 1;
+          if (matchNum === 1 || matchNum === 2 || matchNum === 10 || matchNum === 13) {
+            return '2026-06-28 15:00:00'; // No passado (já terminou)
+          }
+          return '2026-07-01 15:00:00'; // No futuro (ainda vai jogar)
         };
 
         // 16-avos de final (16 jogos)
