@@ -20,17 +20,25 @@ export const seedDatabase = async () => {
       }
 
       const matchCountRes = await pool.query('SELECT COUNT(*) FROM real_matches');
-      if (parseInt(matchCountRes.rows[0].count) < 32) {
-        console.log('🌱 Semeando os 32 jogos reais do mata-mata da Copa 2026...');
+      // Forçando o seed das partidas para atualizar com os times reais
+      if (true) {
+        console.log('🌱 Semeando os 32 jogos reais do mata-mata da Copa 2026 com as seleções reais...');
         // Limpa partidas falsas antigas
         await pool.query('DELETE FROM my_predictions');
         await pool.query('DELETE FROM real_matches');
 
         const matches = [];
         
+        const r32Teams = [
+          ['Brasil', 'Japão'], ['C. do Marfim', 'Noruega'], ['Espanha', 'Áustria'], ['Suíça', 'Argélia'],
+          ['Argentina', 'Cabo Verde'], ['México', 'Equador'], ['Holanda', 'Marrocos'], ['Austrália', 'Egito'],
+          ['França', 'Suécia'], ['África do Sul', 'Canadá'], ['Colômbia', 'Gana'], ['Inglaterra', 'RD Congo'],
+          ['Alemanha', 'Paraguai'], ['Estados Unidos', 'Bósnia'], ['Portugal', 'Croácia'], ['Bélgica', 'Senegal']
+        ];
+        
         // 16-avos de final (16 jogos)
-        for(let i=1; i<=16; i++) {
-          matches.push(`('R32-${i}', '16-avos de Final', 'TBD', 'TBD', 'CONFIRMED', '2026-06-28 12:00:00')`);
+        for(let i=0; i<16; i++) {
+          matches.push(`('R32-${i+1}', '16-avos de Final', '${r32Teams[i][0]}', '${r32Teams[i][1]}', 'CONFIRMED', '2026-06-28 12:00:00')`);
         }
         // Oitavas (8 jogos)
         for(let i=1; i<=8; i++) {
@@ -54,10 +62,7 @@ export const seedDatabase = async () => {
           ${matches.join(',\n')}
         `);
 
-        // Para testes imediatos do usuário, vamos definir os times do primeiro jogo dos 16-avos!
-        await pool.query(`
-          UPDATE real_matches SET t1 = 'Brasil', t2 = 'Japão' WHERE id = 'R32-1'
-        `);
+
       }
   } catch (err) {
       console.error(`❌ Erro ao realizar o seed:`, err.message);

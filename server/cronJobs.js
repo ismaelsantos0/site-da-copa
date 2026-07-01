@@ -66,12 +66,21 @@ export const checkAndResolveMatches = async () => {
         }
       } catch (err) {
         console.log(`⚠️ Fallback: Usando simulação para ${match.id} (${err.message})`);
-        // Se a API não estiver disponível (ex: simulação do usuário, chaves falsas ou sem API key)
-        // Simulamos o resultado para garantir que o chaveamento avance
-        realScoreT1 = Math.floor(Math.random() * 4);
-        realScoreT2 = Math.floor(Math.random() * 4);
-        if (realScoreT1 === realScoreT2) {
-          realScoreT1 += 1; // Desempate simples
+        
+        // Simulação especial baseada na realidade do usuário (Brasil e Noruega avançam)
+        if (match.id === 'R32-1') { // Brasil x Japão (Brasil ganha)
+          realScoreT1 = 3;
+          realScoreT2 = 1;
+        } else if (match.id === 'R32-2') { // C. do Marfim x Noruega (Noruega ganha)
+          realScoreT1 = 0;
+          realScoreT2 = 2;
+        } else {
+          // Outros jogos são simulados aleatoriamente
+          realScoreT1 = Math.floor(Math.random() * 4);
+          realScoreT2 = Math.floor(Math.random() * 4);
+          if (realScoreT1 === realScoreT2) {
+            realScoreT1 += 1; // Desempate simples
+          }
         }
       }
 
