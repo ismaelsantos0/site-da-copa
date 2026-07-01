@@ -123,13 +123,96 @@ function App() {
   const [lines, setLines] = useState([]);
   const [allOdds, setAllOdds] = useState([]);
   const [selectedMatchModal, setSelectedMatchModal] = useState(null);
+  const [matches, setMatches] = useState(initialMatches);
+  const [teamLineup, setTeamLineup] = useState([]);
   const [matchNotes, setMatchNotes] = useState('');
   const [h2hData, setH2hData] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [showPredictionsModal, setShowPredictionsModal] = useState(false);
   const [daysToFinal, setDaysToFinal] = useState(0);
 
-  // Calcula dias para a final
+  // Sincronização da Árvore Principal com o Backend da Copa
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const response = await fetch('/api/real-matches');
+        const data = await response.json();
+        
+        const newMatches = JSON.parse(JSON.stringify(initialMatches));
+        
+        // Helper para pegar bandeiras
+        const getTeamData = (teamName) => {
+          if (!teamName || teamName === 'TBD') return { f: '❓', n: 'TBD', s: '', w: false };
+          for (const side of ['left', 'right']) {
+            for (const match of initialMatches[side].round1) {
+              if (match.t1.n === teamName) return { f: match.t1.f, n: teamName, s: '', w: false };
+              if (match.t2.n === teamName) return { f: match.t2.f, n: teamName, s: '', w: false };
+            }
+          }
+          return { f: '🏳️', n: teamName, s: '', w: false };
+        };
+
+        const updateMatch = (side, round, index, bm) => {
+           if (!newMatches[side][round]) return;
+           if (!newMatches[side][round][index]) return;
+           const m = newMatches[side][round][index];
+           
+           if (bm.t1 !== 'TBD') m.t1 = getTeamData(bm.t1);
+           if (bm.t2 !== 'TBD') m.t2 = getTeamData(bm.t2);
+           
+           if (bm.status === 'FINISHED') {
+             m.status = 'completed';
+             m.t1.s = bm.score_t1?.toString() || '0';
+             m.t2.s = bm.score_t2?.toString() || '0';
+             m.t1.w = bm.score_t1 > bm.score_t2;
+             m.t2.w = bm.score_t2 > bm.score_t1;
+           } else if (bm.status === 'CONFIRMED') {
+             m.status = bm.t1 !== 'TBD' && bm.t2 !== 'TBD' ? 'confirmed' : 'prediction';
+           }
+        };
+
+        data.forEach(bm => {
+           const id = bm.id;
+           const parts = id.split('-');
+           const stage = parts[0];
+           const num = parseInt(parts[1], 10);
+           
+           if (stage === 'R32') {
+             updateMatch(num <= 8 ? 'left' : 'right', 'round1', num <= 8 ? num - 1 : num - 9, bm);
+           } else if (stage === 'R16') {
+             updateMatch(num <= 4 ? 'left' : 'right', 'round2', num <= 4 ? num - 1 : num - 5, bm);
+           } else if (stage === 'QF') {
+             updateMatch(num <= 2 ? 'left' : 'right', 'round3', num <= 2 ? num - 1 : num - 3, bm);
+           } else if (stage === 'SF') {
+             updateMatch(num === 1 ? 'left' : 'right', 'round4', 0, bm);
+           } else if (stage === 'FIN') {
+             newMatches.final.t1 = getTeamData(bm.t1);
+             newMatches.final.t2 = getTeamData(bm.t2);
+             if (bm.status === 'FINISHED') {
+               newMatches.final.status = 'completed';
+               newMatches.final.t1.s = bm.score_t1?.toString() || '0';
+               newMatches.final.t2.s = bm.score_t2?.toString() || '0';
+               newMatches.final.t1.w = bm.score_t1 > bm.score_t2;
+               newMatches.final.t2.w = bm.score_t2 > bm.score_t1;
+               newMatches.final.champ = bm.score_t1 > bm.score_t2 ? newMatches.final.t1 : newMatches.final.t2;
+             } else {
+               newMatches.final.status = bm.t1 !== 'TBD' && bm.t2 !== 'TBD' ? 'confirmed' : 'prediction';
+             }
+           }
+        });
+
+        setMatches(newMatches);
+      } catch (err) {
+        console.error("Erro ao buscar dados reais para o bracket", err);
+      }
+    };
+
+    fetchMatches();
+    const interval = setInterval(fetchMatches, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculador de dias para a final
   useEffect(() => {
     const finalDate = new Date('2026-07-19T15:00:00');
     const today = new Date();
