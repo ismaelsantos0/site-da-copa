@@ -818,13 +818,14 @@ function App() {
       
       <div className="background-overlay"></div>
       
-      {/* Barra de Progresso para a Final */}
-      <div className="countdown-bar">
-        <div className="countdown-progress" style={{ width: `${Math.min(100, 100 - (daysToFinal / 10))} %` }}></div>
-        <span className="countdown-text">🏆 Faltam {daysToFinal} dias para a Grande Final da Copa do Mundo 2026!</span>
-      </div>
+      <div className="top-ui-container">
+        {/* Barra de Progresso para a Final */}
+        <div className="countdown-bar">
+          <div className="countdown-progress" style={{ width: `${Math.min(100, 100 - (daysToFinal / 10))} %` }}></div>
+          <span className="countdown-text">🏆 Faltam {daysToFinal} dias para a Grande Final da Copa do Mundo 2026!</span>
+        </div>
 
-      <div className="app-header">
+        <div className="app-header">
         <h1>🏆 Copa do Mundo 2026</h1>
         <div className="header-controls">
           <div className="legend">
@@ -844,6 +845,7 @@ function App() {
             {isSimulating ? '⏳ Aguarde...' : '🪄 Simular Tudo'}
           </button>
         </div>
+      </div>
       </div>
 
       <TransformWrapper 
