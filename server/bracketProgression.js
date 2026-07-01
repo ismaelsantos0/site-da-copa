@@ -58,7 +58,7 @@ export const validatePredictions = async (match_id, real_score_t1, real_score_t2
         }
       }
 
-      await pool.query("UPDATE my_predictions SET pred_status = $1 WHERE match_id = $2 AND id = $3", [newStatus, match_id, p.id]);
+      await pool.query("UPDATE my_predictions SET status = $1 WHERE match_id = $2", [newStatus, match_id]);
     }
   } catch (error) {
     console.error(`Erro ao validar palpites de ${match_id}:`, error);

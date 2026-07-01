@@ -123,7 +123,6 @@ function App() {
   const [lines, setLines] = useState([]);
   const [allOdds, setAllOdds] = useState([]);
   const [selectedMatchModal, setSelectedMatchModal] = useState(null);
-  const [matches, setMatches] = useState(initialMatches);
   const [teamLineup, setTeamLineup] = useState([]);
   const [matchNotes, setMatchNotes] = useState('');
   const [h2hData, setH2hData] = useState(null);
@@ -202,7 +201,7 @@ function App() {
            }
         });
 
-        setMatches(newMatches);
+        setData(newMatches);
       } catch (err) {
         console.error("Erro ao buscar dados reais para o bracket", err);
       }
