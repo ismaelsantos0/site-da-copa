@@ -130,6 +130,20 @@ function App() {
   const [showPredictionsModal, setShowPredictionsModal] = useState(false);
   const [daysToFinal, setDaysToFinal] = useState(0);
 
+  // Estados para o palpite dentro do modal principal
+  const [modalPredT1, setModalPredT1] = useState('');
+  const [modalPredT2, setModalPredT2] = useState('');
+  const [modalPredStatus, setModalPredStatus] = useState('');
+
+  // Resetar inputs ao abrir um novo modal
+  useEffect(() => {
+    if (selectedMatchModal) {
+      setModalPredT1('');
+      setModalPredT2('');
+      setModalPredStatus('');
+    }
+  }, [selectedMatchModal?.match?.id]);
+
   // Sincronização da Árvore Principal com o Backend da Copa
   useEffect(() => {
     const fetchMatches = async () => {
@@ -852,6 +866,70 @@ function App() {
                 {renderStatBar(match.t1.n, match.t2.n, 'Defesa', 'defense')}
                 {renderStatBar(match.t1.n, match.t2.n, 'Retrospecto', 'form')}
               </div>
+
+              {/* Seção de Palpite Direto */}
+              {match.status !== 'completed' && (
+                <div className="modal-prediction-box">
+                  <h3>🎯 Deixe seu Palpite</h3>
+                  <div className="modal-prediction-inputs">
+                    <div className="pred-input-group">
+                      <span>{match.t1.n}</span>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        max="20"
+                        value={modalPredT1} 
+                        onChange={(e) => setModalPredT1(e.target.value)} 
+                        placeholder="0"
+                      />
+                    </div>
+                    <span className="pred-vs">X</span>
+                    <div className="pred-input-group">
+                      <input 
+                        type="number" 
+                        min="0" 
+                        max="20"
+                        value={modalPredT2} 
+                        onChange={(e) => setModalPredT2(e.target.value)} 
+                        placeholder="0"
+                      />
+                      <span>{match.t2.n}</span>
+                    </div>
+                  </div>
+                  <button 
+                    className="save-pred-btn" 
+                    disabled={modalPredStatus === 'saving' || modalPredT1 === '' || modalPredT2 === ''}
+                    onClick={async () => {
+                      setModalPredStatus('saving');
+                      try {
+                        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                        const reqBody = {
+                          match_id: match.id,
+                          pred_t1: parseInt(modalPredT1),
+                          pred_t2: parseInt(modalPredT2),
+                          t1: match.t1.n,
+                          t2: match.t2.n
+                        };
+                        const res = await fetch(`${apiUrl}/api/predictions`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(reqBody)
+                        });
+                        if (res.ok) {
+                          setModalPredStatus('saved');
+                          setTimeout(() => setModalPredStatus(''), 3000);
+                        } else {
+                          setModalPredStatus('error');
+                        }
+                      } catch (error) {
+                        setModalPredStatus('error');
+                      }
+                    }}
+                  >
+                    {modalPredStatus === 'saving' ? 'Salvando...' : modalPredStatus === 'saved' ? '✅ Salvo!' : modalPredStatus === 'error' ? '❌ Erro' : 'Salvar Palpite Oficial'}
+                  </button>
+                </div>
+              )}
 
               {h2hData && h2hData.summary && (
                 <div className="h2h-summary-box">
