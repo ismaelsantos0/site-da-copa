@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import PredictionsModal from './PredictionsModal';
-import AdminPanel from './AdminPanel';
 import { teamStats, calculateTeamStrength, getTacticalMultiplier } from './teamStats';
 import './App.css';
 
@@ -128,7 +127,6 @@ function App() {
   const [h2hData, setH2hData] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [showPredictionsModal, setShowPredictionsModal] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [daysToFinal, setDaysToFinal] = useState(0);
 
   // Calcula dias para a final
@@ -815,13 +813,9 @@ function App() {
       <button id="cloud-save-btn" className="cloud-save-btn" onClick={saveToCloud}>
         ☁️ Salvar Simulação
       </button>
-      <button className="admin-btn" onClick={() => setShowAdminPanel(true)} style={{position: 'absolute', bottom: '100px', left: '20px', zIndex: 30, background: '#ef4444', color: 'white', padding: '10px 15px', borderRadius: '5px', border: '2px solid #b91c1c', cursor: 'pointer', fontWeight: 'bold'}}>
-        🛠️ Painel Admin
-      </button>
       
       {showPredictionsModal && <PredictionsModal onClose={() => setShowPredictionsModal(false)} />}
-      {showAdminPanel && <AdminPanel onClose={() => setShowAdminPanel(false)} />}
-
+      
       <div className="background-overlay"></div>
       
       {/* Barra de Progresso para a Final */}
