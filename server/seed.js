@@ -35,10 +35,22 @@ export const seedDatabase = async () => {
           ['França', 'Suécia'], ['África do Sul', 'Canadá'], ['Colômbia', 'Gana'], ['Inglaterra', 'RD Congo'],
           ['Alemanha', 'Paraguai'], ['Estados Unidos', 'Bósnia'], ['Portugal', 'Croácia'], ['Bélgica', 'Senegal']
         ];
-        
+        // Distribuindo os jogos ao longo de 4 dias para ser realista
+        // Dia 28: jogos 1 a 4
+        // Dia 29: jogos 5 a 8
+        // Dia 30: jogos 9 a 12 (hoje, alguns já passaram, outros não)
+        // Dia 01: jogos 13 a 16 (futuro)
+        const getMatchDate = (index) => {
+          if (index < 4) return '2026-06-28 15:00:00';
+          if (index < 8) return '2026-06-29 15:00:00';
+          if (index < 10) return '2026-06-30 14:00:00'; // Já passou
+          if (index < 12) return '2026-06-30 23:00:00'; // Ainda vai acontecer hoje
+          return '2026-07-01 15:00:00'; // Amanhã
+        };
+
         // 16-avos de final (16 jogos)
         for(let i=0; i<16; i++) {
-          matches.push(`('R32-${i+1}', '16-avos de Final', '${r32Teams[i][0]}', '${r32Teams[i][1]}', 'CONFIRMED', '2026-06-28 12:00:00')`);
+          matches.push(`('R32-${i+1}', '16-avos de Final', '${r32Teams[i][0]}', '${r32Teams[i][1]}', 'CONFIRMED', '${getMatchDate(i)}')`);
         }
         // Oitavas (8 jogos)
         for(let i=1; i<=8; i++) {
